@@ -16,7 +16,9 @@ public class LogTest {
 
     static {
         try {
-            cleanDirectory(LOG_DIR);
+            if (LOG_DIR.exists()) {
+                cleanDirectory(LOG_DIR);
+            }
             assertThat(getNumberOfLogFiles(), is(0));
         } catch (Exception e) {
             e.printStackTrace();
