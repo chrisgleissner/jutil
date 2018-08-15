@@ -2,7 +2,6 @@ package uk.gleissner.log;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import uk.gleissner.log.Log;
 
 import java.io.File;
 

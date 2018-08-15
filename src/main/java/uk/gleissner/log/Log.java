@@ -15,9 +15,9 @@ import static java.lang.String.format;
 
 public class Log {
 
-    static final Random RANDOM = new Random();
     static final int MAX_THREAD_BACKOFF_IN_MS = 10;
 
+    static final Random random = new Random();
     static final Logger jul = Logger.getLogger(Log.class.getName());
     static final org.apache.log4j.Logger log4j = org.apache.log4j.Logger.getLogger(Log.class);
     static final org.apache.commons.logging.Log jcl = LogFactory.getLog(Log.class);
@@ -39,7 +39,7 @@ public class Log {
             ExecutorService es = Executors.newCachedThreadPool();
             for (int t = 0; t < numberOfThreads; t++) {
                 es.submit(new LogRunnable(t, numberOflogs, e, latch));
-                Thread.sleep(RANDOM.nextInt(MAX_THREAD_BACKOFF_IN_MS));
+                Thread.sleep(random.nextInt(MAX_THREAD_BACKOFF_IN_MS));
             }
             latch.await();
         } catch (Exception e3) {
@@ -87,7 +87,7 @@ public class Log {
                 }
 
                 try {
-                    Thread.sleep(RANDOM.nextInt(MAX_THREAD_BACKOFF_IN_MS));
+                    Thread.sleep(random.nextInt(MAX_THREAD_BACKOFF_IN_MS));
                 } catch (Exception e) {
                     slf4j.error("Thread interrupted", e);
                 }
