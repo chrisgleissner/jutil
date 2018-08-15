@@ -21,21 +21,28 @@ import static org.junit.Assert.assertTrue;
 
 public class LogTest {
 
+    static final int NUM_LOGS = 1_000_000;
+    static final int NUM_THREADS = 10;
+    static final Random RANDOM = new Random();
+    static final File LOG_DIR = new File("target/log");
+    private static final int MAX_THREAD_BACKOFF_IN_MS = 10;
+
+    static {
+        try {
+            FileUtils.cleanDirectory(LOG_DIR);
+            assertTrue(FileUtils.listFiles(LOG_DIR, new String[]{".log"}, true).isEmpty());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     static final Logger jul = Logger.getLogger(LogTest.class.getName());
     static final org.apache.log4j.Logger log4j = org.apache.log4j.Logger.getLogger(LogTest.class);
     static final Log jcl = LogFactory.getLog(LogTest.class);
     static final org.slf4j.Logger slf4j = LoggerFactory.getLogger(LogTest.class);
 
-    static final int NUM_LOGS = 100_000;
-    static final int NUM_THREADS = 10;
-    static final Random RANDOM = new Random();
-    static final File LOG_DIR = new File("target/log");
-    private static final int MAX_THREAD_BACKOFF_IN_MS = 30;
-
     @Test
     public void canLog() throws InterruptedException, IOException {
-        FileUtils.cleanDirectory(LOG_DIR);
-        assertTrue(FileUtils.listFiles(LOG_DIR, new String[] { ".log"}, true).isEmpty());
 
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();

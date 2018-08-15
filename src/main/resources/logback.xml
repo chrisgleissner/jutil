@@ -6,11 +6,13 @@
         </encoder>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>target/log/log-%d{yyyy-MM-dd-HH-mm}.%i.log</fileNamePattern>
-            <maxFileSize>5MB</maxFileSize>
+            <fileNamePattern>target/log/test-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
             <maxHistory>60</maxHistory>
-            <totalSizeCap>20GB</totalSizeCap>
-        </rollingPolicy>    </appender>
+            <totalSizeCap>2GB</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
 
     <root level="debug">
         <appender-ref ref="fileAppender"/>
