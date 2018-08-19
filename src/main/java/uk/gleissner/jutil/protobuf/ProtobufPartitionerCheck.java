@@ -1,6 +1,5 @@
 package uk.gleissner.jutil.protobuf;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -11,6 +10,7 @@ import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.slf4j.LoggerFactory.getLogger;
+import static uk.gleissner.jutil.converter.ByteConverter.toHex;
 
 /**
  * Partitions Protobuf messages for setting them in a containing message to ensure the overall serialized
@@ -36,30 +36,31 @@ public class ProtobufPartitionerCheck<T extends Message> implements CollectionPa
     @Override
     public boolean canBeAdded(Collection<T> partition, T toAdd) {
         long containingMessageOverhead = containingMessage.getSerializedSize();
-        long partitionOverhead = bytesToEncodeUnsignedVarInt(partition.size(), 0)
-                + bytesToEncodeUnsignedVarInt(fieldDescriptorInContainingMessage.getIndex(), BITS_FOR_FIELD_TYPE_ENCODING);
-        long bytes = partition.stream().mapToLong(m -> serializedSizeIncludingOverhead(m)).sum() + serializedSizeIncludingOverhead(toAdd);
-        boolean canBeAdded = containingMessageOverhead + partitionOverhead + bytes <= maxContainingMessageSizeInBytes;
+        long partitionOverhead = serializedSize(partition.size(), 0)
+                + serializedSize(fieldDescriptorInContainingMessage.getIndex(), BITS_FOR_FIELD_TYPE_ENCODING);
+        long partitionBytes = partition.stream().mapToLong(m -> serializedSize(m)).sum();
+        long toAddBytes = serializedSize(toAdd);
+        boolean canBeAdded = containingMessageOverhead + partitionOverhead + partitionBytes + toAddBytes <= maxContainingMessageSizeInBytes;
 
         if (logger.isDebugEnabled()) {
             logger.debug("canBeAdded: partition.size={}, toAdd={}, containingMessageOverhead={}, partitionOverhead={}, " +
-                            "bytes={}, canBeAdded={}",
-                    partition.size(), toAdd, containingMessageOverhead, partitionOverhead, bytes, canBeAdded);
+                            "partitionBytes={}, toAddBytes={}, canBeAdded={}",
+                    partition.size(), toAdd, containingMessageOverhead, partitionOverhead, partitionBytes, toAddBytes, canBeAdded);
             List<T> newPartition = newArrayList(partition);
             if (canBeAdded)
                 newPartition.add(toAdd);
-            logger.debug("New message after add: {}\n", ProtobufUtil.toHex(containingMessage.toBuilder()
-                    .setField(fieldDescriptorInContainingMessage, newPartition).build()));
+            logger.debug("New message after add: {}\n", toHex(containingMessage.toBuilder()
+                    .setField(fieldDescriptorInContainingMessage, newPartition).build().toByteArray()));
 
         }
         return canBeAdded;
     }
 
-    private int serializedSizeIncludingOverhead(Message m) {
-        return bytesToEncodeUnsignedVarInt(m.getSerializedSize(), BITS_FOR_FIELD_TYPE_ENCODING) + m.getSerializedSize();
+    private int serializedSize(Message m) {
+        return serializedSize(m.getSerializedSize(), BITS_FOR_FIELD_TYPE_ENCODING) + m.getSerializedSize();
     }
 
-    private int bytesToEncodeUnsignedVarInt(int toEncode, int unavailableBits) {
+    private int serializedSize(int toEncode, int unavailableBits) {
         int n = 0;
         while (toEncode >> n > 0) {
             n++;

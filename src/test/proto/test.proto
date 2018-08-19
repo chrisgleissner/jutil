@@ -3,9 +3,9 @@ syntax = "proto2";
 package uk.gleissner.jutil.protobuf;
 
 option java_package = "uk.gleissner.jutil.protobuf";
-option java_outer_classname = "NodeProtos";
+option java_outer_classname = "TestProtos";
 
-message Node {
+message Parent {
     optional int32 id = 1;
 
     message Child {
