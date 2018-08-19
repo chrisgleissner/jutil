@@ -1,14 +1,12 @@
-apt:
-  update: true
+language: java
 
 env:
-- PROTOBUF_VERSION=2.6.1
+- PATH=$HOME/protoc/bin:$PATH
 
-before_install:
-- ./install-protobuf.sh
-- PATH=/home/travis/bin:$PATH protoc --version
-
-language: java
+install:
+- curl -L https://github.com/google/protobuf/releases/download/v3.5.1/protoc-3.5.1-linux-x86_64.zip -o /tmp/protoc.zip
+- unzip /tmp/protoc.zip -d "$HOME"/protoc
+- mkdir -p "$HOME"/src && ln -s "$HOME"/protoc "$HOME"/src/protobuf
 
 cache:
   directories:
