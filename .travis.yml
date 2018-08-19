@@ -3,10 +3,7 @@ cache:
   directories:
   - $HOME/.m2
 jdk:
-  oraclejdk8
+- oraclejdk8
 - oraclejdk10
-- oraclejdk-ea
-- openjdk10
-- openjdk11
 sudo: false
 script: mvn clean install
