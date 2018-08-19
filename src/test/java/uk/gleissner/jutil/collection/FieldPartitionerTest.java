@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -32,13 +33,13 @@ public class FieldPartitionerTest {
 
     @Test
     public void partition() {
-        FieldPartitioner.ObjectBuilder b = () -> new LinkedList<Integer>();
+        FieldPartitioner.ObjectBuilder<List<Integer>> b = LinkedList::new;
         FieldPartitioner.FieldAdder<List<Integer>, Integer> a = (list, i) -> {
             if (list.size() < 3) {
                 list.add(i);
                 return Optional.of(list);
             } else {
-                return Optional.empty();
+                return empty();
             }
         };
         Collection<List<Integer>> lists = FieldPartitioner.partition(b, a, list(1, 2, 3, 4, 5, 6, 7));
@@ -47,6 +48,6 @@ public class FieldPartitionerTest {
     }
 
     private List<Integer> list(int... i) {
-        return IntStream.of(i).mapToObj(Integer::new).collect(toList());
+        return IntStream.of(i).boxed().collect(toList());
     }
 }

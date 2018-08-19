@@ -44,8 +44,7 @@ public class ByteConverter {
             return "0 bytes";
         } else {
             String hex = toHex(bytes);
-            StringBuilder sb = new StringBuilder();
-            sb.append(format("%3d byte(s): ", bytes.length));
+            StringBuilder sb = new StringBuilder(format("%3d byte(s): ", bytes.length));
             for (int i = 0; i < hex.length(); i += 2) {
                 if (i > 0) {
                     sb.append(" ");

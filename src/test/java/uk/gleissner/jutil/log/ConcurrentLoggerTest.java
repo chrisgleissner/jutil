@@ -16,6 +16,7 @@
 package uk.gleissner.jutil.log;
 
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +35,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class ConcurrentLoggerTest {
 
     @Mock
-    private Appender mockAppender;
+    private Appender<ILoggingEvent> mockAppender;
 
     @Before
     public void setup() {

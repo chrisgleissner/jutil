@@ -15,14 +15,16 @@
  */
 package uk.gleissner.jutil.protobuf;
 
-import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
-import uk.gleissner.jutil.collection.FieldPartitioner;
+import uk.gleissner.jutil.collection.FieldPartitioner.FieldAdder;
+import uk.gleissner.jutil.collection.FieldPartitioner.ObjectBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
 
 import static java.util.Optional.empty;
+import static uk.gleissner.jutil.collection.FieldPartitioner.partition;
 
 /**
  * Splits a large Protobuf message into multiple messages by equally distributing the contents of one of its
@@ -34,18 +36,17 @@ import static java.util.Optional.empty;
  */
 public class ProtobufFieldPartitioner {
 
-    public static <M extends Message, N> Collection<M> partitition(M msg, Descriptors.FieldDescriptor field,
-                                                                   long maxMsgSizeInBytes) {
-        FieldPartitioner.ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(field).build();
-        FieldPartitioner.FieldAdder<M, N> fieldAdder = (m, n) -> {
-            Optional<M> optionalMessageWithField = empty();
-            M msgWithField = (M) m.toBuilder().addRepeatedField(field, n).build();
-            if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(field) == 1) {
-                optionalMessageWithField = Optional.of(msgWithField);
-            }
-            return optionalMessageWithField;
+    @SuppressWarnings("unchecked")
+    public static <M extends Message, F> Collection<M> partitition(M msg, FieldDescriptor field, long maxMsgSizeInBytes) {
+        ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(field).build();
+
+        FieldAdder<M, F> fieldAdder = (m, f) -> {
+            M msgWithField = (M) m.toBuilder().addRepeatedField(field, f).build();
+            if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(field) == 1)
+                return Optional.of(msgWithField);
+            else return empty();
         };
-        Collection<N> fieldValues = (Collection<N>) msg.getField(field);
-        return FieldPartitioner.partition(objectBuilder, fieldAdder, fieldValues);
+
+        return partition(objectBuilder, fieldAdder, (Collection<F>) msg.getField(field));
     }
 }

@@ -16,7 +16,6 @@
 package uk.gleissner.jutil.protobuf;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import uk.gleissner.jutil.converter.ByteConverter;
@@ -30,6 +29,7 @@ import java.util.stream.IntStream;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
@@ -56,7 +56,7 @@ public class ProtobufFieldPartitionerTest {
                 parent(parentId, 3, 4),
                 parent(parentId,5))));
 
-        parents.stream().forEach(p -> {
+        parents.forEach(p -> {
             logger.debug("Parent: {}", toSpacedHex(p.toByteArray()));
             assertThat(p.getSerializedSize(), is(lessThanOrEqualTo(maxPartitionSizeInBytes)));
         });
@@ -117,7 +117,7 @@ public class ProtobufFieldPartitionerTest {
     }
 
     private Child child(int id, int nameLength) {
-        return Child.newBuilder().setId(id).setName(StringUtils.repeat("a", nameLength)).build();
+        return Child.newBuilder().setId(id).setName(repeat("a", nameLength)).build();
     }
 
     private Parent parent(int parentId, int... childrenIds) {
