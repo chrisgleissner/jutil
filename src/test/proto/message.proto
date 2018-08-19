@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+package uk.gleissner.jutil.protobuf;
+
+option java_package = "uk.gleissner.jutil.protobuf";
+option java_outer_classname = "NodeProtos";
+
+message Node {
+  optional int32 id = 1;
+  repeated Node children = 2;
+}
