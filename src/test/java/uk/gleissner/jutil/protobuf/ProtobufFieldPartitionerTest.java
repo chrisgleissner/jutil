@@ -35,13 +35,15 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
 import static uk.gleissner.jutil.converter.ByteConverter.toSpacedHex;
-import static uk.gleissner.jutil.protobuf.ProtobufFieldPartitioner.partitition;
+import static uk.gleissner.jutil.protobuf.ProtobufFieldPartitioner.partition;
 import static uk.gleissner.jutil.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
+import static uk.gleissner.jutil.protobuf.TestProtos.Parent.ID_FIELD_NUMBER;
 
 public class ProtobufFieldPartitionerTest {
 
     private static final Logger logger = getLogger(ProtobufFieldPartitionerTest.class);
     private static FieldDescriptor childrenField = Parent.Builder.getDescriptor().findFieldByNumber(CHILDREN_FIELD_NUMBER);
+    private static FieldDescriptor idField = Parent.Builder.getDescriptor().findFieldByNumber(ID_FIELD_NUMBER);
 
     @Test
     public void canPartition() {
@@ -49,7 +51,7 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2,3,4,5)).build();
         int maxPartitionSizeInBytes = 12;
 
-        Collection<Parent> parents = partitition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(
                 parentId, 1, 2),
@@ -72,7 +74,7 @@ public class ProtobufFieldPartitionerTest {
                         child(3, 30), child(4, 40), child(5, 50))).build();
         int maxPartitionSizeInBytes = 100;
 
-        Collection<Parent> parents = partitition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents.size(), is(3));
         Iterator<Parent> iterator = parents.iterator();
@@ -89,7 +91,7 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
         int maxPartitionSizeInBytes = 1;
 
-        Collection<Parent> parents = partitition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(
                 parentId, 1),
@@ -105,11 +107,29 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
         int maxPartitionSizeInBytes = 1000;
 
-        Collection<Parent> parents = partitition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(parentId, 1, 2))));
 
         log(parent, parents);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void throwsExceptionIfNotRepeatedField() {
+        Parent parent = Parent.newBuilder().build();
+        partition(parent, idField, 1L);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void throwsExceptionIfMsgIsNull() {
+        Parent parent = Parent.newBuilder().build();
+        partition(null, childrenField, 1L);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void throwsExceptionIfMaxSizeInBytesIsSmallerThanOne() {
+        Parent parent = Parent.newBuilder().build();
+        partition(parent, childrenField, 0L);
     }
 
     private Collection<Child> children(int... ids) {

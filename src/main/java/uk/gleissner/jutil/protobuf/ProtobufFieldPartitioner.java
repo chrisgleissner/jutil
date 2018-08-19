@@ -17,14 +17,16 @@ package uk.gleissner.jutil.protobuf;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
+import uk.gleissner.jutil.collection.FieldPartitioner;
 import uk.gleissner.jutil.collection.FieldPartitioner.FieldAdder;
 import uk.gleissner.jutil.collection.FieldPartitioner.ObjectBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Optional.empty;
-import static uk.gleissner.jutil.collection.FieldPartitioner.partition;
 
 /**
  * Splits a large Protobuf message into multiple messages by equally distributing the contents of one of its
@@ -37,16 +39,20 @@ import static uk.gleissner.jutil.collection.FieldPartitioner.partition;
 public class ProtobufFieldPartitioner {
 
     @SuppressWarnings("unchecked")
-    public static <M extends Message, F> Collection<M> partitition(M msg, FieldDescriptor field, long maxMsgSizeInBytes) {
-        ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(field).build();
+    public static <M extends Message> Collection<M> partition(M msg, FieldDescriptor repeatedField, long maxMsgSizeInBytes) {
+        checkNotNull(msg, "msg");
+        checkArgument(repeatedField.isRepeated(), "repeatedField needs to be repeated but was %s", repeatedField.getType());
+        checkArgument(maxMsgSizeInBytes > 0, "maxMsgSizeInBytes");
 
-        FieldAdder<M, F> fieldAdder = (m, f) -> {
-            M msgWithField = (M) m.toBuilder().addRepeatedField(field, f).build();
-            if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(field) == 1)
+        ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(repeatedField).build();
+
+        FieldAdder<M, ?> fieldAdder = (m, f) -> {
+            M msgWithField = (M) m.toBuilder().addRepeatedField(repeatedField, f).build();
+            if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(repeatedField) == 1)
                 return Optional.of(msgWithField);
             else return empty();
         };
 
-        return partition(objectBuilder, fieldAdder, (Collection<F>) msg.getField(field));
+        return FieldPartitioner.partition(objectBuilder, fieldAdder, (Collection) msg.getField(repeatedField));
     }
 }
