@@ -32,17 +32,16 @@ public class CollectionPartitioner {
         Collection<Collection<T>> partitions = new LinkedList<>();
         Collection<T> partition = new LinkedList<>();
         for (T t : ts) {
-            if (check.canBeAdded(partition, t)) {
+            if (check.canBeAdded(partition, t))
                 partition.add(t);
-            } else {
+            else {
                 partitions.add(partition);
                 partition = new LinkedList<>();
                 partition.add(t);
             }
         }
-        if (!partition.isEmpty()) {
+        if (!partition.isEmpty())
             partitions.add(partition);
-        }
         return partitions;
     }
 }
