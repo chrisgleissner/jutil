@@ -1,4 +1,4 @@
-package uk.gleissner.log;
+package uk.gleissner.jutil.log;
 
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
 
-public class LogTest {
+public class ConcurrentLoggerTest {
 
     static final File LOG_DIR = new File("target/log");
 
@@ -28,11 +28,11 @@ public class LogTest {
 
     @Test
     public void canLog() throws InterruptedException {
-        new Log(2, 10);
+        new ConcurrentLogger(2, 10);
         assertThat(getNumberOfLogFiles(), is(greaterThan(0)));
     }
 
     private static int getNumberOfLogFiles() {
-        return listFiles(LOG_DIR, new String[]{"log"}, true).size();
+        return LOG_DIR.exists() ? listFiles(LOG_DIR, new String[]{"log"}, true).size() : 0;
     }
 }

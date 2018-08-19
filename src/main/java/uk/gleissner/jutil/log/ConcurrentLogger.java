@@ -1,4 +1,4 @@
-package uk.gleissner.log;
+package uk.gleissner.jutil.log;
 
 import com.google.common.math.StatsAccumulator;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -16,29 +16,33 @@ import static java.lang.String.format;
 import static java.lang.System.nanoTime;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
-public class Log {
+/**
+ * Concurrently logs via various frameworks which are all configured to propagate via SLF4J to Logback.
+ * Useful to verify whether logs appear correctly in the target location.
+ */
+public class ConcurrentLogger {
 
     static final int MAX_THREAD_BACKOFF_IN_MS = 10;
     static final String RANDOM_LOG_MESSAGE = RandomStringUtils.randomAlphabetic(100);
 
     static final Random random = new Random();
 
-    static final Logger jul = Logger.getLogger(Log.class.getName());
+    static final Logger jul = Logger.getLogger(ConcurrentLogger.class.getName());
     static final StatsAccumulator julStats = new StatsAccumulator();
 
-    static final org.apache.log4j.Logger log4j = org.apache.log4j.Logger.getLogger(Log.class);
+    static final org.apache.log4j.Logger log4j = org.apache.log4j.Logger.getLogger(ConcurrentLogger.class);
     static final StatsAccumulator log4jStats = new StatsAccumulator();
 
-    static final org.apache.commons.logging.Log jcl = LogFactory.getLog(Log.class);
+    static final org.apache.commons.logging.Log jcl = LogFactory.getLog(ConcurrentLogger.class);
     static final StatsAccumulator jclStats = new StatsAccumulator();
 
-    static final org.slf4j.Logger slf4j = LoggerFactory.getLogger(Log.class);
+    static final org.slf4j.Logger slf4j = LoggerFactory.getLogger(ConcurrentLogger.class);
     static final StatsAccumulator slf4jStats = new StatsAccumulator();
 
     static ReentrantReadWriteLock statsLock = new ReentrantReadWriteLock(true);
 
 
-    public Log(int numberOfThreads, int numberOflogs) {
+    public ConcurrentLogger(int numberOfThreads, int numberOflogs) {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
 
@@ -77,22 +81,6 @@ public class Log {
         } catch (Exception e3) {
             throw new RuntimeException("Logging failed", e3);
         }
-    }
-
-    void addStats(long jul, long log4j, long jcl, long slf4j) {
-        try {
-            statsLock.writeLock().lock();
-            julStats.add(jul);
-            log4jStats.add(log4j);
-            jclStats.add(jcl);
-            slf4jStats.add(slf4j);
-        } finally {
-            statsLock.writeLock().unlock();
-        }
-    }
-
-    synchronized void addJulStats(long mics) {
-        julStats.add(mics);
     }
 
     class LogRunnable implements Runnable {
@@ -159,6 +147,6 @@ public class Log {
     }
 
     public static void main(String[] args) {
-        new Log(10, 1_000_000);
+        new ConcurrentLogger(10, 1_000_000);
     }
 }
