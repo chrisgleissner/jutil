@@ -100,7 +100,6 @@ public class ProtobufFieldPartitionerTest {
         log(parent, parents);
     }
 
-
     @Test
     public void canPartitionWithHugeMaxMessageSize() {
         int parentId = 100;
@@ -112,6 +111,13 @@ public class ProtobufFieldPartitionerTest {
         assertThat(parents, is(newArrayList(parent(parentId, 1, 2))));
 
         log(parent, parents);
+    }
+
+    @Test
+    public void canPartitionEmptyField() {
+        Parent parent = Parent.newBuilder().setId(100).build();
+        Collection<Parent> parents = partition(parent, childrenField, 1000);
+        assertThat(parents, is(newArrayList(parent(100))));
     }
 
     @Test(expected = IllegalArgumentException.class)
