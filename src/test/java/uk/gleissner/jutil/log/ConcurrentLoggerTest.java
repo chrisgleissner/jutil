@@ -1,14 +1,11 @@
 package uk.gleissner.jutil.log;
 
 import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -23,8 +20,6 @@ public class ConcurrentLoggerTest {
 
     @Mock
     private Appender mockAppender;
-    @Captor
-    private ArgumentCaptor<LoggingEvent> captorLoggingEvent;
 
     @Before
     public void setup() {
@@ -43,7 +38,7 @@ public class ConcurrentLoggerTest {
 
 
     @Test
-    public void canLog() throws InterruptedException {
+    public void canLog() {
         new ConcurrentLogger(2, 2);
         verify(mockAppender, times(49)).doAppend(any());
     }
