@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import uk.gleissner.jutil.converter.ByteConverter;
 import uk.gleissner.jutil.protobuf.TestProtos.Parent;
+import uk.gleissner.jutil.protobuf.TestProtos.Parent.Child;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -111,21 +112,22 @@ public class ProtobufFieldPartitionerTest {
         log(parent, parents);
     }
 
-    private Collection<Parent.Child> children(int... ids) {
-        return IntStream.of(ids).mapToObj(id -> Parent.Child.newBuilder().setId(id).build()).collect(toList());
+    private Collection<Child> children(int... ids) {
+        return IntStream.of(ids).mapToObj(id -> Child.newBuilder().setId(id).build()).collect(toList());
     }
 
-    private Parent.Child child(int id, int nameLength) {
-        return Parent.Child.newBuilder().setId(id).setName(StringUtils.repeat("a", nameLength)).build();
+    private Child child(int id, int nameLength) {
+        return Child.newBuilder().setId(id).setName(StringUtils.repeat("a", nameLength)).build();
     }
 
     private Parent parent(int parentId, int... childrenIds) {
-        Collection<Parent.Child> children = IntStream.of(childrenIds).mapToObj(id -> Parent.Child.newBuilder().setId(id).build()).collect(toList());
+        Collection<Child> children = IntStream.of(childrenIds)
+                .mapToObj(id -> Child.newBuilder().setId(id).build()).collect(toList());
         return Parent.newBuilder().setId(parentId).addAllChildren(children).build();
     }
 
     private void log(Parent source, Collection<Parent> targets) {
-        logger.debug("\n\nOriginal parent:\n{}\n\nTarget parent(s):\n{}", ByteConverter.toSpacedHex(source),
+        logger.debug("\n\nOriginal parent:\n{}\n\nTarget parent(s):\n{}", toSpacedHex(source),
                 targets.stream().map(ByteConverter::toSpacedHex).collect(joining("\n")));
     }
 }

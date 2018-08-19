@@ -22,7 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,6 +33,7 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 import static java.lang.System.nanoTime;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 /**
  * Concurrently logs via various frameworks which are all configured to propagate via SLF4J to Logback.
@@ -68,7 +72,7 @@ public class ConcurrentLogger {
             e = e2;
         }
 
-        ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService scheduledExecutor = newSingleThreadScheduledExecutor();
         scheduledExecutor.scheduleAtFixedRate(() -> {
             try {
                 statsLock.readLock().lock();
