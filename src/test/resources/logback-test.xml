@@ -5,7 +5,9 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <logger name="uk.gleissner.jutil.log.ConcurrentLogger" level="off"/>
+
+    <root level="info">
         <appender-ref ref="consoleAppender"/>
     </root>
 </configuration>

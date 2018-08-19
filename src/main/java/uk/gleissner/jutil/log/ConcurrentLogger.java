@@ -78,6 +78,7 @@ public class ConcurrentLogger {
             }
             latch.await();
             scheduledExecutor.shutdown();
+            slf4j.info("Log completed");
         } catch (Exception e3) {
             throw new RuntimeException("Logging failed", e3);
         }

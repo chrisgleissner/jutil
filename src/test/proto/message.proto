@@ -6,6 +6,11 @@ option java_package = "uk.gleissner.jutil.protobuf";
 option java_outer_classname = "NodeProtos";
 
 message Node {
-  optional int32 id = 1;
-  repeated Node children = 2;
+    optional int32 id = 1;
+
+    message Child {
+        optional int32 id = 1;
+    }
+
+    repeated Child children = 2;
 }

@@ -1,38 +1,50 @@
 package uk.gleissner.jutil.log;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.File;
+import static ch.qos.logback.classic.Level.TRACE;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.slf4j.LoggerFactory.getLogger;
 
-import static org.apache.commons.io.FileUtils.cleanDirectory;
-import static org.apache.commons.io.FileUtils.listFiles;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertThat;
-
+@RunWith(MockitoJUnitRunner.class)
 public class ConcurrentLoggerTest {
 
-    static final File LOG_DIR = new File("target/log");
+    @Mock
+    private Appender mockAppender;
+    @Captor
+    private ArgumentCaptor<LoggingEvent> captorLoggingEvent;
 
-    static {
-        try {
-            if (LOG_DIR.exists()) {
-                cleanDirectory(LOG_DIR);
-            }
-            assertThat(getNumberOfLogFiles(), is(0));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    @Before
+    public void setup() {
+        final Logger logger = (Logger) getLogger(ConcurrentLogger.class.getName());
+        logger.setLevel(TRACE);
+        logger.setAdditive(false);
+        logger.addAppender(mockAppender);
+    }
+
+    @After
+    public void teardown() {
+        final Logger logger = (Logger) getLogger(ConcurrentLogger.class.getName());
+        logger.setAdditive(true);
+        logger.detachAppender(mockAppender);
     }
 
 
     @Test
     public void canLog() throws InterruptedException {
-        new ConcurrentLogger(2, 10);
-        assertThat(getNumberOfLogFiles(), is(greaterThan(0)));
-    }
-
-    private static int getNumberOfLogFiles() {
-        return LOG_DIR.exists() ? listFiles(LOG_DIR, new String[]{"log"}, true).size() : 0;
+        new ConcurrentLogger(2, 2);
+        verify(mockAppender, times(49)).doAppend(any());
     }
 }
