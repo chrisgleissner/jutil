@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
-import static uk.gleissner.jutil.converter.ByteConverter.toHex;
+import static uk.gleissner.jutil.converter.ByteConverter.toSpacedHex;
 import static uk.gleissner.jutil.protobuf.ProtobufFieldPartitioner.partitition;
 import static uk.gleissner.jutil.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
 
@@ -41,7 +41,7 @@ public class ProtobufFieldPartitionerTest {
                 parent(parentId,5))));
 
         parents.stream().forEach(p -> {
-            logger.debug("Parent: {}", toHex(p.toByteArray()));
+            logger.debug("Parent: {}", toSpacedHex(p.toByteArray()));
             assertThat(p.getSerializedSize(), is(lessThanOrEqualTo(maxPartitionSizeInBytes)));
         });
 
@@ -110,7 +110,7 @@ public class ProtobufFieldPartitionerTest {
     }
 
     private void log(Parent source, Collection<Parent> targets) {
-        logger.debug("\n\nOriginal parent:\n{}\n\nTarget parent(s):\n{}", toHex(source),
-                targets.stream().map(ByteConverter::toHex).collect(joining("\n")));
+        logger.debug("\n\nOriginal parent:\n{}\n\nTarget parent(s):\n{}", ByteConverter.toSpacedHex(source),
+                targets.stream().map(ByteConverter::toSpacedHex).collect(joining("\n")));
     }
 }
