@@ -38,9 +38,8 @@ public class FieldPartitioner {
             o = addResult.get();
         }
 
-        if (addResult.isPresent()) {
+        if (addResult.isPresent())
             os.add(o);
-        }
 
         return os;
     }

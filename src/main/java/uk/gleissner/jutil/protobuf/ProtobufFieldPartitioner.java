@@ -7,6 +7,8 @@ import uk.gleissner.jutil.collection.FieldPartitioner;
 import java.util.Collection;
 import java.util.Optional;
 
+import static java.util.Optional.empty;
+
 /**
  * Splits a large Protobuf message into multiple messages by equally distributing the contents of one of its
  * fields across newly created instances. All fields other than the distributed field remain as per the original Protobuf
@@ -21,7 +23,7 @@ public class ProtobufFieldPartitioner {
                                                                     long maxMsgSizeInBytes) {
         FieldPartitioner.ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(field).build();
         FieldPartitioner.FieldAdder<M, N> fieldAdder = (m, n) -> {
-            Optional<M> optionalMessageWithField = Optional.empty();
+            Optional<M> optionalMessageWithField = empty();
             M msgWithField = (M) m.toBuilder().addRepeatedField(field, n).build();
             if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(field) == 1) {
                 optionalMessageWithField = Optional.of(msgWithField);

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 /**
- * Partitions a collection into a collection of collections.
+ * Partitions a T collection into a collection of T collections whilst ensuring {@link Check}s are met.
  */
 public class CollectionPartitioner {
 
