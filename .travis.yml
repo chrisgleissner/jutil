@@ -14,8 +14,7 @@ cache:
 
 jdk:
 - oraclejdk8
-- oraclejdk10
 
 sudo: false
 
-script: mvn clean install
+scipt: mvn clean install
