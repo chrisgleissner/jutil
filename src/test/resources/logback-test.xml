@@ -7,7 +7,7 @@
 
     <logger name="uk.gleissner.jutil.log.ConcurrentLogger" level="off"/>
 
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="consoleAppender"/>
     </root>
 </configuration>

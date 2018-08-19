@@ -18,6 +18,6 @@ public class ByteConverterTest {
 
     @Test
     public void toHexNullArray() {
-        assertEquals("null", ByteConverter.toHex(null));
+        assertEquals("null", ByteConverter.toHex((byte[]) null));
     }
 }

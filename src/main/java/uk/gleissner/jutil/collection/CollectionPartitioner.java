@@ -3,6 +3,9 @@ package uk.gleissner.jutil.collection;
 import java.util.Collection;
 import java.util.LinkedList;
 
+/**
+ * Partitions a collection into a collection of collections.
+ */
 public class CollectionPartitioner {
 
     @FunctionalInterface

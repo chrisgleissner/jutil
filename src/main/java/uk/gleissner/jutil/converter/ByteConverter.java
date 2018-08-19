@@ -1,9 +1,15 @@
 package uk.gleissner.jutil.converter;
 
+import com.google.protobuf.Message;
+
 import static java.lang.String.format;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 public class ByteConverter {
+
+    public static String toHex(Message msg) {
+        return toHex(msg.toByteArray());
+    }
 
     public static String toHex(byte[] bytes) {
         if (bytes == null) {
