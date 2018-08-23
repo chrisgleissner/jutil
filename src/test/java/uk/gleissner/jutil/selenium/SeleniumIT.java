@@ -9,7 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.junit.Assert.assertTrue;
 
-public class SeleniumTest {
+public class SeleniumIT {
 
     @Test
     public void testGoogleSearch() throws InterruptedException {
