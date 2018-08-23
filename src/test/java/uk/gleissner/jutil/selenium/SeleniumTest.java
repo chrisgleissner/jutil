@@ -6,13 +6,14 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.junit.Assert.assertTrue;
 
 public class SeleniumTest {
 
     @Test
     public void testGoogleSearch() throws InterruptedException {
-        System.setProperty("webdriver.chrome.driver", "lib/chromedriver");
+        System.setProperty("webdriver.chrome.driver", "lib/chromedriver" + (IS_OS_WINDOWS ? ".exe" : ""));
 
         WebDriver driver = new ChromeDriver();
         driver.get("http://www.google.com/xhtml");
