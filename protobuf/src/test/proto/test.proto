@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package uk.gleissner.jutil.protobuf;
+
+option java_package = "uk.gleissner.jutil.protobuf";
+option java_outer_classname = "TestProtos";
+
+message Parent {
+    optional int32 id = 1;
+
+    message Child {
+        optional int32 id = 1;
+        optional string name = 2;
+    }
+
+    repeated Child children = 2;
+}
