@@ -23,7 +23,7 @@ public class SpringConfig {
     @Bean
     public ScheduledExecutorService scheduler() {
         es = newSingleThreadScheduledExecutor(r -> new Thread(r, "scheduler"));
-        rangeClosed(1, 1000).forEach(i -> {
+        rangeClosed(1, 10).forEach(i -> {
             logger.info("Iteration {}: {}", i, rangeClosed(1, 100000).map(j -> j + 1).filter(j -> j > 1000 && i < 1000000).sum());
         });
         return es;

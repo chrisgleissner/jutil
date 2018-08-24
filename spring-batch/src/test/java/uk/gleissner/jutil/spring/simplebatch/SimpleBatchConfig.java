@@ -6,8 +6,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -42,11 +41,6 @@ public class SimpleBatchConfig {
     }
 
     @Bean
-    public PersonItemProcessor processor() {
-        return new PersonItemProcessor();
-    }
-
-    @Bean
     public CacheItemWriter<Person> writer() {
         return new CacheItemWriter();
     }
@@ -66,7 +60,7 @@ public class SimpleBatchConfig {
         return stepBuilderFactory.get("step1")
                 .<Person, Person> chunk(10)
                 .reader(reader())
-                .processor(processor())
+                .processor((ItemProcessor<Person,Person>) (person) -> new Person(person.getFirstName().toUpperCase(), person.getLastName().toUpperCase()))
                 .writer(writer)
                 .build();
     }
