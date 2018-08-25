@@ -9,7 +9,8 @@ jdk:
 - oraclejdk10
 
 script:
-- mvn clean install -Pjacoco coveralls:report
+- mvn clean install cobertura:cobertura
 
-
+after_success:
+- bash <(curl -s https://codecov.io/bash)
   
