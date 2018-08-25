@@ -1,8 +1,5 @@
 language: java
 
-env:
-- PATH=$HOME/protoc/bin:$PATH
-
 cache:
   directories:
   - $HOME/.m2
@@ -11,8 +8,8 @@ jdk:
 - oraclejdk8
 - oraclejdk10
 
-sudo: false
+script:
+- mvn clean install -Pjacoco coveralls:report
 
-script: mvn clean install jacoco:report coveralls:report
 
   
