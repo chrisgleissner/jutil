@@ -13,7 +13,7 @@ Distributing the elements of a repeated field in a Protobuf message over multipl
 
 Example:
 ```java
-  int maxPartitionSizeInBytes = 100;
-  Parent msg = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2, 3)).build();
-  Collection<Parent> partitionedMsgs = ProtbufFieldPartitioner.partition(msg, childrenField, maxPartitionSizeInBytes);
+int maxPartitionSizeInBytes = 100;
+Parent msg = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2, 3)).build();
+Collection<Parent> msgs = ProtbufFieldPartitioner.partition(msg, childrenField, maxPartitionSizeInBytes);
 ```
