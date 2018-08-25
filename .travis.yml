@@ -13,8 +13,6 @@ jdk:
 
 sudo: false
 
-script: mvn clean install cobertura:cobertura
+script: mvn clean install jacoco:report coveralls:report
 
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
   
