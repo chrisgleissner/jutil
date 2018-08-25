@@ -58,7 +58,7 @@ public class CustomJobLauncher {
                 }})
                 .build();
 
-        TaskletStep step = stepBuilderFactory.get("step1")
+        TaskletStep step1 = stepBuilderFactory.get("step1")
                 .<Person, Person>chunk(10)
                 .reader(reader)
                 .processor((ItemProcessor<Person, Person>) (person) -> new Person(person.getFirstName().toUpperCase(), person.getLastName().toUpperCase()))
@@ -68,7 +68,7 @@ public class CustomJobLauncher {
         return jobBuilderFactory.get(jobName)
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .flow(step)
+                .flow(step1)
                 .end()
                 .build();
 
