@@ -13,4 +13,8 @@ jdk:
 
 sudo: false
 
-scipt: mvn clean install
+script: mvn clean install cobertura:cobertura
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  
