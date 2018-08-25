@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.simplebatch;
+package uk.gleissner.jutil.spring.batch;
 
 import org.springframework.batch.item.ItemWriter;
 

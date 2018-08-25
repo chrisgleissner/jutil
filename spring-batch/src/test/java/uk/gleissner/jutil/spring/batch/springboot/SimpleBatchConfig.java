@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.simplebatch;
+package uk.gleissner.jutil.spring.batch.springboot;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -15,6 +15,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import uk.gleissner.jutil.spring.batch.CacheItemWriter;
+import uk.gleissner.jutil.spring.batch.JobCompletionNotificationListener;
+import uk.gleissner.jutil.spring.batch.Person;
 
 @Configuration
 @ComponentScan
@@ -43,6 +46,11 @@ public class SimpleBatchConfig {
     @Bean
     public CacheItemWriter<Person> writer() {
         return new CacheItemWriter();
+    }
+
+    @Bean
+    public JobCompletionNotificationListener jobCompletionNotificationListener() {
+        return new JobCompletionNotificationListener();
     }
 
     @Bean

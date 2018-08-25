@@ -1,12 +1,14 @@
-package uk.gleissner.jutil.spring.simplebatch;
+package uk.gleissner.jutil.spring.batch.springboot;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import uk.gleissner.jutil.spring.batch.CacheItemWriter;
+import uk.gleissner.jutil.spring.batch.JobCompletionNotificationListener;
+import uk.gleissner.jutil.spring.batch.Person;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -22,7 +24,7 @@ public class SimpleBatchTest {
 
     @Test
     public void canWrite() throws InterruptedException {
-        completionNotificationListener.getCountDownLatch().await(5, SECONDS);
+        completionNotificationListener.awaitCompletionOfJobs(1, 5_000);
         assertThat(writer.getItems().size(), is(5));
         assertThat(writer.getItems().iterator().next().getFirstName(), is("JILL"));
     }

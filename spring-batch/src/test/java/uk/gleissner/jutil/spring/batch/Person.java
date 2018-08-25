@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.simplebatch;
+package uk.gleissner.jutil.spring.batch;
 
 public class Person {
 
