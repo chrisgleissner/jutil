@@ -5,11 +5,13 @@
 
 Various Java utilies.
 
-## Protobuf Field Partitioner
+## Protobuf
+
+[ProtobufFieldPartitioner](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/uk/gleissner/jutil/protobuf/ProtobufFieldPartitioner.java)
 
 Distributing the elements of a repeated field in a Protobuf message over multiple newly created messages. This allows for sending a Protobuf message where size restrictions exist, for examine in the case when using Azure Message ServiceBus.
 
-Usage:
+Example:
 ```java
   int maxPartitionSizeInBytes = 100;
   Parent msg = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2, 3)).build();
