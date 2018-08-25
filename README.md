@@ -15,5 +15,5 @@ Example:
 ```java
   int maxPartitionSizeInBytes = 100;
   Parent msg = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2, 3)).build();
-  Collection<Parent> partitionedMsgs = partition(msg, childrenField, maxPartitionSizeInBytes);
+  Collection<Parent> partitionedMsgs = ProtbufFieldPartitioner.partition(msg, childrenField, maxPartitionSizeInBytes);
 ```
