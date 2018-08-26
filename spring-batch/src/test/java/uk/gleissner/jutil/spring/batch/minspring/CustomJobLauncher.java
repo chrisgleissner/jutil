@@ -1,5 +1,6 @@
 package uk.gleissner.jutil.spring.batch.minspring;
 
+import org.quartz.Scheduler;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -33,6 +34,9 @@ public class CustomJobLauncher {
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
+
+    @Autowired
+    private Scheduler scheduler;
 
     private JobCompletionNotificationListener listener = new JobCompletionNotificationListener();
     private CacheItemWriter<Person> writer = new CacheItemWriter();
