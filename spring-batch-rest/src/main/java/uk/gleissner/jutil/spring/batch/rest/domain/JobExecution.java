@@ -4,6 +4,7 @@ import com.google.common.base.Throwables;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.ExitStatus;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -16,19 +17,22 @@ import static uk.gleissner.jutil.spring.batch.rest.util.DateUtil.localDateTime;
 public class JobExecution {
 
     public static JobExecution fromSpring(org.springframework.batch.core.JobExecution je) {
-        return JobExecution.builder().jobId(je.getJobId())
+        return JobExecution.builder()
+                .jobId(je.getJobId())
+                .id(je.getId())
                 .startTime(localDateTime(je.getStartTime()))
                 .endTime(localDateTime(je.getEndTime()))
+                .exitStatus(je.getExitStatus())
                 .status(je.getStatus())
                 .exceptions(je.getFailureExceptions().stream().map(e -> e.getMessage() + ": " + Throwables.getStackTraceAsString(e)).collect(toList()))
                 .build();
     }
 
-    public enum Status { STARTED, COMPLETED, FAILED };
-
+    private long id;
     private long jobId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private ExitStatus exitStatus;
     private BatchStatus status;
     private Collection<String> exceptions;
 

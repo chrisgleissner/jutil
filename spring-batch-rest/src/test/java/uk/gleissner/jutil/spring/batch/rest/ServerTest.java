@@ -1,9 +1,12 @@
 package uk.gleissner.jutil.spring.batch.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gleissner.jutil.spring.batch.rest.MockSetup.configureMock;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
