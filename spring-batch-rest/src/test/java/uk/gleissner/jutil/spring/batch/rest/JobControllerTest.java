@@ -32,10 +32,13 @@ public class JobControllerTest {
 
     @Test
     public void jobs() throws Exception {
-        when(jobService.getJobExecutions(any())).thenReturn(newArrayList(jobExecution("1"), jobExecution("2")));
+        when(jobService.getJobExecutions(any(), any(), any(), any()))
+                .thenReturn(newArrayList(jobExecution("1"), jobExecution("2")));
+
         mockMvc.perform(get("/jobExecutions"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"id\":\"1\",\"startTime\":null,\"endTime\":null,\"status\":null},{\"id\":\"2\",\"startTime\":null,\"endTime\":null,\"status\":null}]"));
+                .andExpect(content().json("[{\"jobId\":\"1\",\"startTime\":null,\"endTime\":null," +
+                        "\"status\":null},{\"jobId\":\"2\",\"startTime\":null,\"endTime\":null,\"status\":null}]"));
     }
 }
