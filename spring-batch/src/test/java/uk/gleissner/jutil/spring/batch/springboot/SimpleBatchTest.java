@@ -23,9 +23,9 @@ public class SimpleBatchTest {
     private JobCompletionNotificationListener completionNotificationListener;
 
     @Test
-    public void canWrite() throws InterruptedException {
-        completionNotificationListener.awaitCompletionOfJobs(1, 5_000);
-        assertThat(writer.getItems().size(), is(5));
+    public void quartzSchedulerWorks() throws InterruptedException {
+        completionNotificationListener.awaitCompletionOfJobs(2, 5_000);
+        assertThat(writer.getItems().size(), is(10));
         assertThat(writer.getItems().iterator().next().getFirstName(), is("JILL"));
     }
 }

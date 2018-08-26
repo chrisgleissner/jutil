@@ -66,6 +66,7 @@ public class SimpleBatchConfig {
     @Bean
     public Step step1(CacheItemWriter<Person> writer) {
         return stepBuilderFactory.get("step1")
+                .allowStartIfComplete(true)
                 .<Person, Person> chunk(10)
                 .reader(reader())
                 .processor((ItemProcessor<Person,Person>) (person) -> new Person(person.getFirstName().toUpperCase(), person.getLastName().toUpperCase()))
