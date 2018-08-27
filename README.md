@@ -27,6 +27,6 @@ wiring time. This allows for simplified set-up of a large number of jobs that on
 
 Example:
 ```java
-adHocScheduler.schedule("jobName", () -> { ... return job; }, "0/30 * * * * ?");
+adHocScheduler.schedule("jobName", () -> job, "0/30 * * * * ?");
 
 ```
