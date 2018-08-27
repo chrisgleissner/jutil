@@ -20,7 +20,7 @@ import static uk.gleissner.jutil.spring.batch.adhoc.QuartzJobLauncher.JOB_LOCATO
 @Configuration
 @ComponentScan
 @EnableBatchProcessing
-public class SpringBatchConfig extends DefaultBatchConfigurer {
+public class AdHocSchedulerConfig extends DefaultBatchConfigurer {
 
     @Autowired
     private JobLocator jobLocator;
