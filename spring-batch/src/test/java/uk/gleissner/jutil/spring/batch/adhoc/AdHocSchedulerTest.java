@@ -42,8 +42,9 @@ public class AdHocSchedulerTest {
 
     private static final int NUMBER_OF_JOBS = 2;
     private static final int NUMBER_OF_EXECUTIONS_PER_JOB = 2;
-    public static final String JOB_NAME_1 = "importUser1";
-    public static final String JOB_NAME_2 = "importUser2";
+
+    private static final String JOB_NAME_1 = "importUserFromCsv1";
+    private static final String JOB_NAME_2 = "importUserFromCsv2";
 
     @Autowired
     private AdHocScheduler adHocScheduler;
@@ -69,34 +70,25 @@ public class AdHocSchedulerTest {
     }
 
     private Supplier<Job> csvImportJobSupplier(String jobName, String csvFilename) {
-        return () -> {
-            FlatFileItemReader<Person> reader = new FlatFileItemReaderBuilder<Person>()
-                    .name("personItemReader")
-                    .resource(new ClassPathResource(csvFilename))
-                    .delimited()
-                    .names(new String[]{"firstName", "lastName"})
-                    .fieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
-                        setTargetType(Person.class);
-                    }})
-                    .build();
-
-            TaskletStep step = stepBuilderFactory.get("step")
-                    .<Person, Person>chunk(10)
-                    .reader(reader)
-                    .processor((ItemProcessor<Person, Person>) (person)
-                            -> new Person(
-                            person.getFirstName().toUpperCase(),
-                            person.getLastName().toUpperCase()))
-                    .writer(writer)
-                    .allowStartIfComplete(true)
-                    .build();
-
-            return jobBuilderFactory.get(jobName)
-                    .incrementer(new RunIdIncrementer()) // adds unique parameter on each run so that job can be rerun
-                    .listener(listener)
-                    .flow(step)
-                    .end()
-                    .build();
-        };
+        return () -> jobBuilderFactory.get(jobName)
+                .incrementer(new RunIdIncrementer()) // adds unique parameter on each run so that job can be rerun
+                .listener(listener)
+                .flow(stepBuilderFactory.get("step")
+                        .<Person, Person>chunk(10)
+                        .reader(new FlatFileItemReaderBuilder<Person>()
+                                .name("personItemReader")
+                                .resource(new ClassPathResource(csvFilename))
+                                .delimited()
+                                .names(new String[]{"firstName", "lastName"})
+                                .fieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
+                                    setTargetType(Person.class);
+                                }})
+                                .build())
+                        .processor((ItemProcessor<Person, Person>) (person)
+                                -> new Person(person.getFirstName().toUpperCase(), person.getLastName().toUpperCase()))
+                        .writer(writer)
+                        .allowStartIfComplete(true)
+                        .build())
+                .end().build();
     }
 }

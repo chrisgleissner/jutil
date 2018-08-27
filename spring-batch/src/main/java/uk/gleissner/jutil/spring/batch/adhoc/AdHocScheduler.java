@@ -27,11 +27,14 @@ public class AdHocScheduler {
 
     private static final String GROUP_NAME = "group";
 
-    @Autowired
     private JobRegistry jobRegistry;
+    private Scheduler scheduler;
 
     @Autowired
-    private Scheduler scheduler;
+    public AdHocScheduler(JobRegistry jobRegistry, Scheduler scheduler) {
+        this.jobRegistry = jobRegistry;
+        this.scheduler = scheduler;
+    }
 
     public void schedule(String jobName, Supplier<Job> jobSupplier, String cronExpression) throws DuplicateJobException {
         jobRegistry.register(new JobFactory() {
@@ -66,5 +69,4 @@ public class AdHocScheduler {
             throw new RuntimeException(format("Can't schedule job %s with cronExpression %s", jobName, cronExpression), e);
         }
     }
-
 }
