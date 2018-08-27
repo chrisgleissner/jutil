@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/chrisgleissner/jutil.svg?branch=master)](https://travis-ci.org/chrisgleissner/jutil)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
-Various Java utilies.
+Various Java utilities for Protobuf, Spring Batch and Quartz. 
 
 ## Protobuf
 
