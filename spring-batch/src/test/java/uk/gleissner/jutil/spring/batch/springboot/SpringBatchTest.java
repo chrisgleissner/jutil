@@ -12,9 +12,12 @@ import uk.gleissner.jutil.spring.batch.Person;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+/**
+ * Tests the idiomatic Quartz scheduling of Spring Batch jobs via Spring Boot.
+ */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class SimpleBatchTest {
+public class SpringBatchTest {
 
     @Autowired
     private CacheItemWriter<Person> writer;

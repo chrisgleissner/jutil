@@ -1,7 +1,7 @@
-package uk.gleissner.jutil.spring.batch.minspring;
+package uk.gleissner.jutil.spring.batch.adhoc;
 
+import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -14,23 +14,24 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class QuartzJobLauncher extends QuartzJobBean {
 
+    static final String JOB_NAME = "jobName";
     static final String JOB_LOCATOR = "jobLocator";
     static final String JOB_LAUNCHER = "jobLauncher";
 
     private static final Logger logger = getLogger(QuartzJobLauncher.class);
 
-    private String jobName;
-
-    public void setJobName(String jobName) {
-        this.jobName = jobName;
-    }
-
     @Override
-    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+    protected void executeInternal(JobExecutionContext context) {
         try {
-            Job job = ((JobLocator) context.get(JOB_LOCATOR)).getJob(jobName);
+            JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+            String jobName = dataMap.getString(JOB_NAME);
+
+            JobLocator jobLocator = (JobLocator) context.getScheduler().getContext().get(JOB_LOCATOR);
+            JobLauncher jobLauncher = (JobLauncher) context.getScheduler().getContext().get(JOB_LAUNCHER);
+
+            Job job = jobLocator.getJob(jobName);
             logger.info("Starting job {}", job.getName());
-            JobExecution jobExecution = ((JobLauncher) context.get(JOB_LAUNCHER)).run(job, new JobParameters());
+            JobExecution jobExecution = jobLauncher.run(job, new JobParameters());
             logger.info("{}_{} was completed successfully", job.getName(), jobExecution.getId());
         } catch (Exception e) {
             logger.error("Encountered job execution exception", e);

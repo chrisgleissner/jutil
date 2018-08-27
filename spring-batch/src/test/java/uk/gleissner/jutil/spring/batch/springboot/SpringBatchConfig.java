@@ -22,7 +22,7 @@ import uk.gleissner.jutil.spring.batch.Person;
 @Configuration
 @ComponentScan
 @EnableBatchProcessing
-public class SimpleBatchConfig {
+public class SpringBatchConfig {
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;

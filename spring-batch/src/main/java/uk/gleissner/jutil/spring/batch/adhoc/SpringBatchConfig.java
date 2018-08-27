@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.minspring;
+package uk.gleissner.jutil.spring.batch.adhoc;
 
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -14,13 +14,13 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
-import static uk.gleissner.jutil.spring.batch.minspring.QuartzJobLauncher.JOB_LAUNCHER;
-import static uk.gleissner.jutil.spring.batch.minspring.QuartzJobLauncher.JOB_LOCATOR;
+import static uk.gleissner.jutil.spring.batch.adhoc.QuartzJobLauncher.JOB_LAUNCHER;
+import static uk.gleissner.jutil.spring.batch.adhoc.QuartzJobLauncher.JOB_LOCATOR;
 
 @Configuration
 @ComponentScan
 @EnableBatchProcessing
-public class CustomJobLauncherConfig extends DefaultBatchConfigurer {
+public class SpringBatchConfig extends DefaultBatchConfigurer {
 
     @Autowired
     private JobLocator jobLocator;
