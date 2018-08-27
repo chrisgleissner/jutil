@@ -13,7 +13,7 @@ Distributing the elements of a repeated field in a Protobuf message over multipl
 
 Example:
 ```java
-Collection<Parent> msgs = ProtbufFieldPartitioner.partition(msg, childrenField, 100);
+Collection<Message> msgs = ProtbufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
 ```
 
 ## Spring Batch
