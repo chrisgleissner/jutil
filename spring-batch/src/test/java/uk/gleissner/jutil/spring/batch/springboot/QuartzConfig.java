@@ -52,8 +52,6 @@ public class QuartzConfig {
 
     @Bean
     public SchedulerFactoryBean schedulerFactoryBean() {
-        // TODO Use builder instead
-        // CronTrigger cronTrigger = TriggerBuilder.newTrigger().withSchedule(cronSchedule("0/1 * * * * ?")).forJob("importUserJob").build();
         SchedulerFactoryBean scheduler = new SchedulerFactoryBean();
         scheduler.setTriggers(cronTriggerFactoryBean().getObject());
         return scheduler;
