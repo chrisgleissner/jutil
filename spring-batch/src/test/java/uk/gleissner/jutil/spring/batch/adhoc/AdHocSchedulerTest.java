@@ -56,6 +56,7 @@ public class AdHocSchedulerTest {
     public void scheduleWorks() throws InterruptedException, DuplicateJobException {
         scheduler.schedule(JOB_NAME_1, csvImportJobSupplier(JOB_NAME_1, CSV1_FILENAME), CRON_SCHEDULE_TO_TRIGGER_EVERY_SECOND);
         scheduler.schedule(JOB_NAME_2, csvImportJobSupplier(JOB_NAME_2, CSV2_FILENAME), CRON_SCHEDULE_TO_TRIGGER_EVERY_SECOND);
+        scheduler.start();
 
         listener.awaitCompletionOfJobs(NUMBER_OF_JOBS * NUMBER_OF_EXECUTIONS_PER_JOB, 5_000);
 

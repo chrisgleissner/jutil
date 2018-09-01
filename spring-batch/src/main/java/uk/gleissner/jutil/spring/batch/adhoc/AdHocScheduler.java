@@ -3,6 +3,7 @@ package uk.gleissner.jutil.spring.batch.adhoc;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.DuplicateJobException;
 import org.springframework.batch.core.configuration.JobFactory;
@@ -18,14 +19,16 @@ import static java.lang.String.format;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Allows to schedule Spring Batch jobs via Quartz 'ad hoc' via the {@link #schedule(String, Supplier, String)} method
- * rather than Spring wiring each job. This allows for programmatic creation of multiple jobs at run-time rather than
- * Spring wiring time.
+ * Allows to schedule Spring Batch jobs via Quartz by using a {@link #schedule(String, Supplier, String)} method
+ * rather than Spring wiring each job. This allows for programmatic creation of multiple jobs at run-time.
  */
 @Component
 public class AdHocScheduler {
+
+    private static final Logger logger = getLogger(AdHocScheduler.class);
 
     private static final String GROUP_NAME = "group";
 
@@ -35,14 +38,18 @@ public class AdHocScheduler {
     private StepBuilderFactory stepBuilderFactory;
 
     @Autowired
-    public AdHocScheduler(JobRegistry jobRegistry, Scheduler scheduler, JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
+    public AdHocScheduler(JobRegistry jobRegistry,Scheduler scheduler, JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
         this.jobRegistry = jobRegistry;
         this.scheduler = scheduler;
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
     }
 
+    /**
+     * Schedules a Spring Batch job via a Quartz cron expression.
+     */
     public void schedule(String jobName, Supplier<Job> jobSupplier, String cronExpression) throws DuplicateJobException {
+        logger.debug("Scheduling job {} with CRON expression {}", jobName, cronExpression);
         jobRegistry.register(new JobFactory() {
             @Override
             public Job createJob() {
@@ -68,11 +75,25 @@ public class AdHocScheduler {
                     .build();
 
             scheduler.scheduleJob(jobDetail, trigger);
-
-            if (!scheduler.isStarted())
-                scheduler.start();
+            logger.info("Scheduled job {} with CRON expression {}", jobName, cronExpression);
         } catch (Exception e) {
             throw new RuntimeException(format("Can't schedule job %s with cronExpression %s", jobName, cronExpression), e);
+        }
+    }
+
+    /**
+     * Starts the Quartz scheduler unless it is already started. Necessary for any scheduled jobs to start.
+     */
+    public void start() {
+        try {
+            if (!scheduler.isStarted()) {
+                scheduler.start();
+                logger.info("Started Quartz scheduler");
+            } else {
+                logger.warn("Quartz scheduler already started");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Could not start Quartz scheduler", e);
         }
     }
 
