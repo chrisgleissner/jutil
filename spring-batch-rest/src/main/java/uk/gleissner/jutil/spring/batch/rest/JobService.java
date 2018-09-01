@@ -46,7 +46,7 @@ public class JobService {
             try {
                 int jobInstanceCount = jobExplorer.getJobInstanceCount(jobName);
                 List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName,
-                        min(0, jobInstanceCount - maxNumberOfJobInstances.orElse(MAX_VALUE)),
+                        Math.max(0, jobInstanceCount - maxNumberOfJobInstances.orElse(MAX_VALUE)),
                         maxNumberOfJobInstances.orElse(MAX_VALUE));
                 for (JobInstance jobInstance : jobInstances) {
                     List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance).stream()

@@ -1,8 +1,10 @@
 package uk.gleissner.jutil.spring.batch.rest.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Throwables;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.Wither;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 
@@ -12,7 +14,7 @@ import java.util.Collection;
 import static java.util.stream.Collectors.toList;
 import static uk.gleissner.jutil.spring.batch.rest.util.DateUtil.localDateTime;
 
-@Data
+@Value
 @Builder
 public class JobExecution {
 

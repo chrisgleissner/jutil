@@ -7,7 +7,7 @@ import java.util.Date;
 public class DateUtil {
 
     public static LocalDateTime localDateTime(Date date) {
-        return date.toInstant()
+        return date == null ? null : date.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }

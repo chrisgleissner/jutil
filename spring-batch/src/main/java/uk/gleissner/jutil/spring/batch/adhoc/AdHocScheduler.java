@@ -7,6 +7,8 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.DuplicateJobException;
 import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.JobRegistry;
+import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,11 +31,15 @@ public class AdHocScheduler {
 
     private JobRegistry jobRegistry;
     private Scheduler scheduler;
+    private JobBuilderFactory jobBuilderFactory;
+    private StepBuilderFactory stepBuilderFactory;
 
     @Autowired
-    public AdHocScheduler(JobRegistry jobRegistry, Scheduler scheduler) {
+    public AdHocScheduler(JobRegistry jobRegistry, Scheduler scheduler, JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
         this.jobRegistry = jobRegistry;
         this.scheduler = scheduler;
+        this.jobBuilderFactory = jobBuilderFactory;
+        this.stepBuilderFactory = stepBuilderFactory;
     }
 
     public void schedule(String jobName, Supplier<Job> jobSupplier, String cronExpression) throws DuplicateJobException {
@@ -68,5 +74,13 @@ public class AdHocScheduler {
         } catch (Exception e) {
             throw new RuntimeException(format("Can't schedule job %s with cronExpression %s", jobName, cronExpression), e);
         }
+    }
+
+    public JobBuilderFactory jobs() {
+        return jobBuilderFactory;
+    }
+
+    public StepBuilderFactory steps() {
+        return stepBuilderFactory;
     }
 }
