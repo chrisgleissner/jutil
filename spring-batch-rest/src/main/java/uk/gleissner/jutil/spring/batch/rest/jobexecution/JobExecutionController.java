@@ -1,10 +1,9 @@
-package uk.gleissner.jutil.spring.batch.rest;
+package uk.gleissner.jutil.spring.batch.rest.jobexecution;
 
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;
 import org.springframework.web.bind.annotation.*;
-import uk.gleissner.jutil.spring.batch.rest.domain.JobExecutionResource;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -18,11 +17,11 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 public class JobExecutionController {
 
     @Autowired
-    private JobService jobService;
+    private JobExecutionService jobExecutionService;
 
     @GetMapping("/{id}")
     public JobExecutionResource get(@PathVariable long id) {
-        return new JobExecutionResource(jobService.jobExecution(id));
+        return new JobExecutionResource(jobExecutionService.jobExecution(id));
     }
 
     @GetMapping
@@ -31,7 +30,7 @@ public class JobExecutionController {
             @RequestParam(value = "exitStatus", required = false) ExitStatus exitStatus,
             @RequestParam(value = "maxNumberOfJobInstances", required = false) Integer maxNumberOfJobInstances,
             @RequestParam(value = "maxNumberOfJobExecutionsPerInstance", required = false) Integer maxNumberOfJobExecutionsPerInstance) {
-        Collection<JobExecutionResource> jobExecutions = jobService.jobExecutions(
+        Collection<JobExecutionResource> jobExecutions = jobExecutionService.jobExecutions(
                 Optional.ofNullable(jobName),
                 Optional.ofNullable(exitStatus),
                 Optional.ofNullable(maxNumberOfJobInstances),

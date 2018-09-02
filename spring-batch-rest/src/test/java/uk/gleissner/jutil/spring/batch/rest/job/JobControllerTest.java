@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.rest;
+package uk.gleissner.jutil.spring.batch.rest.job;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +13,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,7 +22,7 @@ import static uk.gleissner.jutil.spring.batch.rest.MockSetup.configureMock;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class JobExecutionControllerTest {
+public class JobControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,4 +42,5 @@ public class JobExecutionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.*", hasSize(2)));
     }
+
 }

@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.rest.domain;
+package uk.gleissner.jutil.spring.batch.rest.jobexecution;
 
 import com.google.common.base.Throwables;
 import lombok.Builder;

@@ -1,8 +1,7 @@
-package uk.gleissner.jutil.spring.batch.rest.domain;
+package uk.gleissner.jutil.spring.batch.rest.jobexecution;
 
 import lombok.Getter;
 import org.springframework.hateoas.ResourceSupport;
-import uk.gleissner.jutil.spring.batch.rest.JobExecutionController;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;

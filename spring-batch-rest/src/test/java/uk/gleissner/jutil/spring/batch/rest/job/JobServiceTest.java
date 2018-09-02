@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.rest;
+package uk.gleissner.jutil.spring.batch.rest.job;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,9 +21,7 @@ import org.springframework.batch.core.repository.JobRestartException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Optional;
 
-import static java.util.Optional.empty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -70,51 +68,15 @@ public class JobServiceTest {
     }
 
     @Test
-    public void jobExecutionsAll() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.JobExecution> jes = jobService.jobExecutions(empty(), empty(), empty(), empty());
-        assertThat(jes).hasSize(6);
-    }
-
-    @Test
-    public void jobExecutionsId() {
-        uk.gleissner.jutil.spring.batch.rest.domain.JobExecution je = jobService.jobExecution(1L);
-        assertThat(je).isNotNull();
-    }
-
-    @Test
-    public void jobExecutionsJobNameRegexp() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.JobExecution> jes = jobService.jobExecutions(Optional.of("j1"), empty(), empty(), empty());
-        assertThat(jes).hasSize(3);
-    }
-
-    @Test
-    public void jobExecutionsStatus() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.JobExecution> jes = jobService.jobExecutions(Optional.of("j1"), Optional.of(ExitStatus.COMPLETED), empty(), empty());
-        assertThat(jes).hasSize(2);
-    }
-
-    @Test
-    public void jobExecutionsMaxNumberOfJobInstances() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.JobExecution> jes = jobService.jobExecutions(empty(), Optional.of(ExitStatus.FAILED), Optional.of(1), empty());
-        assertThat(jes).hasSize(3);
-    }
-
-    @Test
-    public void jobExecutionsMaxNumberOfJobExecutionsPerInstance() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.JobExecution> jes = jobService.jobExecutions(empty(), Optional.of(ExitStatus.COMPLETED), empty(), Optional.of(1));
-        assertThat(jes).hasSize(3);
-    }
-
-    @Test
     public void launchJob() {
-        uk.gleissner.jutil.spring.batch.rest.domain.JobExecution jobExecution = jobService.launch("foo");
+        uk.gleissner.jutil.spring.batch.rest.jobexecution.JobExecution jobExecution = jobService.launch("foo");
         assertThat(jobExecution.getJobName()).matches("foo");
         assertThat(jobExecution.getStatus()).matches(BatchStatus::isRunning);
     }
 
     @Test
     public void jobs() {
-        Collection<uk.gleissner.jutil.spring.batch.rest.domain.Job> jobs = jobService.jobs();
+        Collection<uk.gleissner.jutil.spring.batch.rest.job.Job> jobs = jobService.jobs();
         assertThat(jobs).hasSize(2);
 
     }

@@ -1,10 +1,9 @@
-package uk.gleissner.jutil.spring.batch.rest;
+package uk.gleissner.jutil.spring.batch.rest.job;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;
 import org.springframework.web.bind.annotation.*;
-import uk.gleissner.jutil.spring.batch.rest.domain.JobExecutionResource;
-import uk.gleissner.jutil.spring.batch.rest.domain.JobResource;
+import uk.gleissner.jutil.spring.batch.rest.jobexecution.JobExecutionResource;
 
 import java.util.Collection;
 

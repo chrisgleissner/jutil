@@ -19,19 +19,20 @@ import static org.springframework.batch.core.ExitStatus.FAILED;
 
 public class MockSetup {
 
-    public static void configureMock(JobExplorer jobExplorer) throws NoSuchJobException {
+    private static JobInstance j11 = new JobInstance(1L, "j1");
+    private static JobInstance j12 = new JobInstance(2L, "j1");
+    private static JobInstance j21 = new JobInstance(3L, "j2");
+    private static JobInstance j22 = new JobInstance(4L, "j2");
+    private static JobInstance j23 = new JobInstance(5L, "j2");
+
+    public static void configureMock(JobExplorer jobExplorer) {
         reset(jobExplorer);
         when(jobExplorer.getJobNames()).thenReturn(newArrayList("j1", "j2"));
+    }
 
+    public static void configureMockForJobExecutionsService(JobExplorer jobExplorer) throws NoSuchJobException {
         when(jobExplorer.getJobInstanceCount("j1")).thenReturn(2);
         when(jobExplorer.getJobInstanceCount("j2")).thenReturn(3);
-
-        JobInstance j11 = new JobInstance(1L, "j1");
-        JobInstance j12 = new JobInstance(2L, "j1");
-
-        JobInstance j21 = new JobInstance(3L, "j2");
-        JobInstance j22 = new JobInstance(4L, "j2");
-        JobInstance j23 = new JobInstance(5L, "j2");
 
         when(jobExplorer.getJobInstances(eq("j1"), anyInt(), anyInt())).thenReturn(newArrayList(j11, j12));
         when(jobExplorer.getJobInstances(eq("j2"), anyInt(), anyInt())).thenReturn(newArrayList(j21, j22, j23));

@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.rest;
+package uk.gleissner.jutil.spring.batch.rest.jobexecution;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,11 +18,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gleissner.jutil.spring.batch.rest.MockSetup.configureMock;
+import static uk.gleissner.jutil.spring.batch.rest.MockSetup.configureMockForJobExecutionsService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class JobControllerTest {
+public class JobExecutionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,6 +34,7 @@ public class JobControllerTest {
     @Before
     public void setUp() throws NoSuchJobException {
         configureMock(jobExplorer);
+        configureMockForJobExecutionsService(jobExplorer);
     }
 
     @Test

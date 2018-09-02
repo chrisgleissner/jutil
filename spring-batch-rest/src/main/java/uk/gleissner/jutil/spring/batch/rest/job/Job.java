@@ -1,4 +1,4 @@
-package uk.gleissner.jutil.spring.batch.rest.domain;
+package uk.gleissner.jutil.spring.batch.rest.job;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
