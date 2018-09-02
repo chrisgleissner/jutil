@@ -1,48 +1,42 @@
 package uk.gleissner.jutil.spring.batch.rest;
 
-import org.slf4j.Logger;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.Resources;
 import org.springframework.web.bind.annotation.*;
-import uk.gleissner.jutil.spring.batch.rest.domain.Job;
-import uk.gleissner.jutil.spring.batch.rest.domain.JobExecution;
+import uk.gleissner.jutil.spring.batch.rest.domain.JobExecutionResource;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static java.util.Optional.empty;
-import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/jobExecution", produces = "application/hal+json")
 public class JobExecutionController {
 
-    private static final Logger logger = getLogger(JobExecutionController.class);
-
     @Autowired
     private JobService jobService;
 
     @GetMapping("/{id}")
-    public JobExecution get(@PathVariable long id) {
-        return jobService.jobExecution(id);
+    public JobExecutionResource get(@PathVariable long id) {
+        return new JobExecutionResource(jobService.jobExecution(id));
     }
 
     @GetMapping
-    public Collection<JobExecution> all(
-            @RequestParam(value = "jobName", required = false) String jobNameRegexp,
-            @RequestParam(value = "exitStatus", required = false) ExitStatus jobExecutionStatus,
+    public Resources<JobExecutionResource> all(
+            @RequestParam(value = "jobName", required = false) String jobName,
+            @RequestParam(value = "exitStatus", required = false) ExitStatus exitStatus,
             @RequestParam(value = "maxNumberOfJobInstances", required = false) Integer maxNumberOfJobInstances,
             @RequestParam(value = "maxNumberOfJobExecutionsPerInstance", required = false) Integer maxNumberOfJobExecutionsPerInstance) {
-        return jobService.jobExecutions(
-                Optional.ofNullable(jobNameRegexp),
-                Optional.ofNullable(jobExecutionStatus),
+        Collection<JobExecutionResource> jobExecutions = jobService.jobExecutions(
+                Optional.ofNullable(jobName),
+                Optional.ofNullable(exitStatus),
                 Optional.ofNullable(maxNumberOfJobInstances),
-                Optional.ofNullable(maxNumberOfJobExecutionsPerInstance));
+                Optional.ofNullable(maxNumberOfJobExecutionsPerInstance)).stream().map(JobExecutionResource::new).collect(Collectors.toList());
+        return new Resources<>(jobExecutions, linkTo(methodOn(JobExecutionController.class)
+                .all(jobName, exitStatus, maxNumberOfJobInstances, maxNumberOfJobExecutionsPerInstance)).withSelfRel());
     }
 }

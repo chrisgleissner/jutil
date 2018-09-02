@@ -1,20 +1,16 @@
 package uk.gleissner.jutil.spring.batch.rest;
 
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.Resources;
 import org.springframework.web.bind.annotation.*;
-import uk.gleissner.jutil.spring.batch.rest.domain.Job;
-import uk.gleissner.jutil.spring.batch.rest.domain.JobExecution;
+import uk.gleissner.jutil.spring.batch.rest.domain.JobExecutionResource;
+import uk.gleissner.jutil.spring.batch.rest.domain.JobResource;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import static org.slf4j.LoggerFactory.getLogger;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping(value = "/job", produces = "application/hal+json")
@@ -23,27 +19,20 @@ public class JobController {
     @Autowired
     private JobService jobService;
 
+    @GetMapping("/{jobName}")
+    public JobResource get(@PathVariable String jobName) {
+        return new JobResource(jobService.job(jobName));
+    }
+
     @GetMapping
-    public Collection<Job> all() {
-        return jobService.jobs();
+    public Resources<JobResource> all() {
+        Collection<JobResource> jobs = jobService.jobs().stream().map(JobResource::new).collect(toList());
+        return new Resources<>(jobs, linkTo(methodOn(JobController.class).all()).withSelfRel());
+
     }
 
     @PutMapping("/{jobName}")
-    public JobExecution put(@PathVariable String jobName) {
-        return jobService.launch(jobName);
-    }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseBody
-    public Map<String, String> errorResponse(Exception ex, HttpServletResponse response) {
-        Map<String, String> errorMap = new HashMap<>();
-        errorMap.put("errorMessage", ex.getMessage());
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        ex.printStackTrace(pw);
-        String stackTrace = sw.toString();
-        errorMap.put("errorStackTrace", stackTrace);
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return errorMap;
+    public JobExecutionResource put(@PathVariable String jobName) {
+        return new JobExecutionResource(jobService.launch(jobName));
     }
 }

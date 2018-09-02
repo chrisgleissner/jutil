@@ -1,11 +1,5 @@
 package uk.gleissner.jutil.spring.batch.rest;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,6 +22,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = DEFINED_PORT)
@@ -89,6 +88,7 @@ public class ServerTest {
         assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=COMPLETED", String.class))
                 .contains("\"status\":\"COMPLETED\"")
                 .contains("\"id\":0,\"jobId\":0");
-        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=FAILED*", String.class)).matches("\\[\\]");
+        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=FAILED*", String.class))
+                .contains("jobExecution?exitStatus=exitCode%3DFAILED");
     }
 }
