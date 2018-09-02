@@ -4,7 +4,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
-import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.DuplicateJobException;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
@@ -21,6 +20,7 @@ import uk.gleissner.jutil.spring.batch.adhoc.AdHocSchedulerConfig;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -38,6 +38,7 @@ public class ServerTest {
     }
 
     private static final Logger logger = getLogger(ServerTest.class);
+    private static final String CRON_EXPRESSION = "0/1 * * * * ?";
     private static final String JOB_NAME = "testJob";
     private static final int MAX_ITEMS = 100;
 
@@ -54,41 +55,58 @@ public class ServerTest {
     @Autowired
     private AdHocScheduler scheduler;
 
-    @Before
-    public void setUp() throws DuplicateJobException {
-        scheduler.schedule(JOB_NAME, () -> job(), "0/1 * * * * ?");
-        scheduler.start();
-    }
+    private static AtomicBoolean firstExecution = new AtomicBoolean();
 
-    private Job job() {
-        return scheduler.jobs().get(JOB_NAME)
-                .incrementer(new RunIdIncrementer()) // adds unique parameter on each run so that job can be rerun
-                .flow(scheduler.steps().get("step")
-                        .<Integer, String>chunk(30)
-                        .reader(() -> {
-                            int i = readerSource.incrementAndGet();
-                            if (i % 10 == 0)
-                                logger.info("Read {} item(s) so far", i);
-                            return i <= MAX_ITEMS ? i : null;
-                        })
-                        .processor((ItemProcessor<Integer, String>) (i1) -> i1.toString())
-                        .writer(items -> {
-                            writerTarget.addAll(items);
-                            logger.info("Wrote {} item(s) so far", writerTarget.size());
-                            allItemsWrittenSemaphore.release(items.size());
-                        })
-                        .allowStartIfComplete(true)
-                        .build()).end().build();
+    @Before
+    public void setUp() throws DuplicateJobException, InterruptedException {
+        if (firstExecution.compareAndSet(false, true)) {
+            scheduler.schedule(
+                    JOB_NAME,
+                    () -> scheduler.jobs().get(JOB_NAME)
+                            .incrementer(new RunIdIncrementer()) // adds unique parameter on each run so that job can be rerun
+                            .flow(scheduler.steps().get("step")
+                                    .<Integer, String>chunk(30)
+                                    .reader(() -> {
+                                        int i = readerSource.incrementAndGet();
+                                        if (i % 10 == 0)
+                                            logger.info("Read {} item(s) so far", i);
+                                        return i <= MAX_ITEMS ? i : null;
+                                    })
+                                    .processor((ItemProcessor<Integer, String>) (i1) -> i1.toString())
+                                    .writer(items -> {
+                                        writerTarget.addAll(items);
+                                        logger.info("Wrote {} item(s) so far", writerTarget.size());
+                                        allItemsWrittenSemaphore.release(items.size());
+                                    })
+                                    .allowStartIfComplete(true)
+                                    .build()).end().build(),
+                    CRON_EXPRESSION);
+            scheduler.start();
+
+            allItemsWrittenSemaphore.tryAcquire(1, 3, SECONDS);
+            assertThat(writerTarget).hasSize(MAX_ITEMS);
+        }
     }
 
     @Test
-    public void jobExecutions() throws InterruptedException {
-        allItemsWrittenSemaphore.tryAcquire(1, 3, SECONDS);
-        assertThat(writerTarget).hasSize(MAX_ITEMS);
-        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=COMPLETED", String.class))
-                .contains("\"status\":\"COMPLETED\"")
-                .contains("\"id\":0,\"jobId\":0");
-        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=FAILED*", String.class))
+    public void jobExecution() {
+        assertThat(this.restTemplate.getForObject(url("/jobExecution?exitStatus=COMPLETED"), String.class))
+                .contains("\"status\":\"COMPLETED\"").contains("\"id\":0,\"jobId\":0");
+        assertThat(this.restTemplate.getForObject(url("/jobExecution?exitStatus=FAILED"), String.class))
                 .contains("jobExecution?exitStatus=exitCode%3DFAILED");
+    }
+
+    @Test
+    public void jobDetail() {
+        assertThat(this.restTemplate.getForObject(url("/jobDetail"), String.class))
+                .contains(CRON_EXPRESSION);
+        assertThat(this.restTemplate.getForObject(url("/jobDetail?enabled=false"), String.class))
+                .doesNotContain(CRON_EXPRESSION);
+        assertThat(this.restTemplate.getForObject(url("/jobDetail?springBatchJobName=" + JOB_NAME), String.class))
+                .contains(CRON_EXPRESSION).contains(JOB_NAME);
+    }
+
+    private String url(String path) {
+        return "http://localhost:" + port + path;
     }
 }
