@@ -41,6 +41,8 @@ public class MockSetup {
         when(jobExplorer.getJobExecutions(j21)).thenReturn(newArrayList());
         when(jobExplorer.getJobExecutions(j22)).thenReturn(newArrayList(jobExecution(j21, 4, FAILED), jobExecution(j21, 5, FAILED)));
         when(jobExplorer.getJobExecutions(j23)).thenReturn(newArrayList(jobExecution(j23, 6, COMPLETED)));
+
+        when(jobExplorer.getJobExecution(1L)).thenReturn(jobExecution(j11, 1, COMPLETED));
     }
 
 

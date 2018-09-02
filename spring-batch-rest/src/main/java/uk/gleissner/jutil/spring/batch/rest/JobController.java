@@ -1,40 +1,49 @@
 package uk.gleissner.jutil.spring.batch.rest;
 
 import org.slf4j.Logger;
-import org.springframework.batch.core.ExitStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import uk.gleissner.jutil.spring.batch.rest.domain.Job;
 import uk.gleissner.jutil.spring.batch.rest.domain.JobExecution;
 
-import java.util.List;
-import java.util.Optional;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 @RestController
+@RequestMapping(value = "/job", produces = "application/hal+json")
 public class JobController {
-
-    private static final Logger logger = getLogger(JobController.class);
 
     @Autowired
     private JobService jobService;
 
-    @RequestMapping("/jobExecutions")
+    @GetMapping
+    public Collection<Job> all() {
+        return jobService.jobs();
+    }
+
+    @PutMapping("/{jobName}")
+    public JobExecution put(@PathVariable String jobName) {
+        return jobService.launch(jobName);
+    }
+
+    @ExceptionHandler(Exception.class)
     @ResponseBody
-    public List<JobExecution> jobExecutions(
-            @RequestParam(value="jobName", required=false) String jobNameRegexp,
-            @RequestParam(value="exitStatus", required=false) ExitStatus jobExecutionStatus,
-            @RequestParam(value="maxNumberOfJobInstances", required=false) Integer maxNumberOfJobInstances,
-            @RequestParam(value="maxNumberOfJobExecutionsPerInstance", required=false) Integer maxNumberOfJobExecutionsPerInstance) {
-        List<JobExecution> jobExecutions = jobService.jobExecutions(
-                Optional.ofNullable(jobNameRegexp),
-                Optional.ofNullable(jobExecutionStatus),
-                Optional.ofNullable(maxNumberOfJobInstances),
-                Optional.ofNullable(maxNumberOfJobExecutionsPerInstance));
-        logger.info("Returning Job executions: {}", jobExecutions);
-        return jobExecutions;
+    public Map<String, String> errorResponse(Exception ex, HttpServletResponse response) {
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("errorMessage", ex.getMessage());
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String stackTrace = sw.toString();
+        errorMap.put("errorStackTrace", stackTrace);
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return errorMap;
     }
 }

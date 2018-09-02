@@ -3,12 +3,14 @@ package uk.gleissner.jutil.spring.batch.rest;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
+import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.DuplicateJobException;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
@@ -28,7 +30,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = DEFINED_PORT)
 public class ServerTest {
 
     @TestConfiguration
@@ -55,7 +57,12 @@ public class ServerTest {
 
     @Before
     public void setUp() throws DuplicateJobException {
-        scheduler.schedule(JOB_NAME, () -> scheduler.jobs().get(JOB_NAME)
+        scheduler.schedule(JOB_NAME, () -> job(), "0/1 * * * * ?");
+        scheduler.start();
+    }
+
+    private Job job() {
+        return scheduler.jobs().get(JOB_NAME)
                 .incrementer(new RunIdIncrementer()) // adds unique parameter on each run so that job can be rerun
                 .flow(scheduler.steps().get("step")
                         .<Integer, String>chunk(30)
@@ -72,17 +79,16 @@ public class ServerTest {
                             allItemsWrittenSemaphore.release(items.size());
                         })
                         .allowStartIfComplete(true)
-                        .build()).end().build(), "0/1 * * * * ?");
-        scheduler.start();
+                        .build()).end().build();
     }
 
     @Test
     public void jobExecutions() throws InterruptedException {
         allItemsWrittenSemaphore.tryAcquire(1, 3, SECONDS);
         assertThat(writerTarget).hasSize(MAX_ITEMS);
-        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecutions?exitStatus=COMPLETED", String.class))
+        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=COMPLETED", String.class))
                 .contains("\"status\":\"COMPLETED\"")
                 .contains("\"id\":0,\"jobId\":0");
-        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecutions?exitStatus=FAILED*", String.class)).matches("\\[\\]");
+        assertThat(this.restTemplate.getForObject("http://localhost:" + port + "/jobExecution?exitStatus=FAILED*", String.class)).matches("\\[\\]");
     }
 }

@@ -12,9 +12,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,7 +23,7 @@ import static uk.gleissner.jutil.spring.batch.rest.MockSetup.configureMock;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class JobControllerTest {
+public class JobExecutionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -38,10 +37,10 @@ public class JobControllerTest {
     }
 
     @Test
-    public void jobExecutions() throws Exception {
-        mockMvc.perform(get("/jobExecution"))
+    public void jobs() throws Exception {
+        mockMvc.perform(get("/job"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(6)));
+                .andExpect(jsonPath("$.*", hasSize(2)));
     }
 }

@@ -1,10 +1,8 @@
 package uk.gleissner.jutil.spring.batch.rest.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Throwables;
-import lombok.*;
-import lombok.experimental.Wither;
+import lombok.Builder;
+import lombok.Value;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 
@@ -16,12 +14,13 @@ import static uk.gleissner.jutil.spring.batch.rest.util.DateUtil.localDateTime;
 
 @Value
 @Builder
-public class JobExecution {
+public class JobExecution implements Comparable<JobExecution> {
 
-    public static JobExecution fromSpring(org.springframework.batch.core.JobExecution je) {
+    public static JobExecution fromSpring(String jobName, org.springframework.batch.core.JobExecution je) {
         return JobExecution.builder()
                 .jobId(je.getJobId())
                 .id(je.getId())
+                .jobName(jobName)
                 .startTime(localDateTime(je.getStartTime()))
                 .endTime(localDateTime(je.getEndTime()))
                 .exitStatus(je.getExitStatus())
@@ -32,10 +31,21 @@ public class JobExecution {
 
     private long id;
     private long jobId;
+    private String jobName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private ExitStatus exitStatus;
     private BatchStatus status;
     private Collection<String> exceptions;
 
+
+    @Override
+    public int compareTo(JobExecution o) {
+        int result = this.getJobName() != null ? this.getJobName().compareToIgnoreCase(o.getJobName()) : 0;
+        if (result == 0)
+            result = id > o.id ? 1 : (id < o.id ? -1 : 0);
+        if (result == 0)
+            result = jobId > o.jobId ? 1 : (jobId < o.jobId ? -1 : 0);
+        return result;
+    }
 }
