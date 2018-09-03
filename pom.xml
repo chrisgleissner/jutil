@@ -59,8 +59,6 @@
         <module>common</module>
         <module>protobuf</module>
         <module>selenium</module>
-        <module>spring-batch</module>
-        <module>spring-batch-rest</module>
     </modules>
 
     <dependencyManagement>
