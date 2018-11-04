@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.chrisgleissner.util.protobuf;
+package com.github.chrisgleissner.jutil.protobuf;
 
-import com.github.chrisgleissner.util.converter.ByteConverter;
-import com.github.chrisgleissner.util.protobuf.TestProtos.Parent;
-import com.github.chrisgleissner.util.protobuf.TestProtos.Parent.Child;
+import com.github.chrisgleissner.jutil.converter.ByteConverter;
+import com.github.chrisgleissner.jutil.protobuf.TestProtos.Parent;
+import com.github.chrisgleissner.jutil.protobuf.TestProtos.Parent.Child;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -26,9 +26,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 
-import static com.github.chrisgleissner.util.converter.ByteConverter.toSpacedHex;
-import static com.github.chrisgleissner.util.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
-import static com.github.chrisgleissner.util.protobuf.TestProtos.Parent.ID_FIELD_NUMBER;
+import static com.github.chrisgleissner.jutil.converter.ByteConverter.toSpacedHex;
+import static com.github.chrisgleissner.jutil.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
+import static com.github.chrisgleissner.jutil.protobuf.TestProtos.Parent.ID_FIELD_NUMBER;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.joining;
@@ -47,7 +47,7 @@ public class ProtobufFieldPartitionerTest {
     @Test
     public void canPartition() {
         int parentId = 100;
-        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2,3,4,5)).build();
+        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2, 3, 4, 5)).build();
         int maxPartitionSizeInBytes = 12;
 
         Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
@@ -55,7 +55,7 @@ public class ProtobufFieldPartitionerTest {
         assertThat(parents, is(newArrayList(parent(
                 parentId, 1, 2),
                 parent(parentId, 3, 4),
-                parent(parentId,5))));
+                parent(parentId, 5))));
 
         parents.forEach(p -> {
             logger.debug("Parent: {}", toSpacedHex(p.toByteArray()));
@@ -87,7 +87,7 @@ public class ProtobufFieldPartitionerTest {
     @Test
     public void canPartitionWithTinyMaxMessageSize() {
         int parentId = 100;
-        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
+        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2)).build();
         int maxPartitionSizeInBytes = 1;
 
         Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
@@ -102,7 +102,7 @@ public class ProtobufFieldPartitionerTest {
     @Test
     public void canPartitionWithHugeMaxMessageSize() {
         int parentId = 100;
-        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
+        Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1, 2)).build();
         int maxPartitionSizeInBytes = 1000;
 
         Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);

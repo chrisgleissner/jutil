@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.chrisgleissner.util.protobuf;
+package com.github.chrisgleissner.jutil.protobuf;
 
-import com.github.chrisgleissner.util.collection.FieldPartitioner;
+import com.github.chrisgleissner.jutil.collection.FieldPartitioner;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 
