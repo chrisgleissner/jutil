@@ -4,22 +4,20 @@
 [![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil-protobuf)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
-Various Java utilities.
-
-## Getting Started
+Various Java utilities for Protobuf messages, pretty-printing of tables, etc.
 
 
-Maven dependency:
+## Protobuf
+
+Maven Dependency:
 
 ```xml
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
-
-## Protobuf
 
 The [ProtobufFieldPartitioner](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/protobuf/ProtobufFieldPartitioner.java) 
 is useful for distributing the elements of a repeated field in a Protobuf message over multiple newly created messages. 
@@ -32,7 +30,17 @@ Example:
 Collection<Message> msgs = ProtbufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
 ```
 
-## Table Printer
+## Table
+
+Maven Dependency:
+
+```xml
+<dependency>
+    <groupId>com.github.chrisgleissner</groupId>
+    <artifactId>jutil-table</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
 
 The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
 serializes a table to a pretty-printed string, either using ASCII or UTF borders.
