@@ -12,6 +12,9 @@ import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+/**
+ * Pretty prints a table.
+ */
 @Builder
 public class TablePrinter {
 
