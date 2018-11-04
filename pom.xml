@@ -5,7 +5,7 @@
 
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>jutil</name>
@@ -183,7 +183,7 @@
         <url>https://github.com/chrisgleissner/jutil</url>
         <connection>scm:git:git://github.com/chrisgleissner/jutil.git</connection>
         <developerConnection>scm:git:git@github.com:chrisgleissner/jutil.git</developerConnection>
-        <tag>v1.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <profiles>
