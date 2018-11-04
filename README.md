@@ -1,7 +1,7 @@
 # util
 
-[![Build Status](https://travis-ci.org/chrisgleissner/jutil.svg?branch=master)](https://travis-ci.org/chrisgleissner/jutil)
-[![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
+[![Build Status](https://travis-ci.org/chrisgleissner/util.svg?branch=master)](https://travis-ci.org/chrisgleissner/util)
+[![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/util/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/util?branch=master)
 
 Various Java utilities.
 
