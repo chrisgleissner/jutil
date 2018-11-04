@@ -5,6 +5,7 @@ import com.github.chrisgleissner.jutil.table.format.TableFormat;
 import lombok.Builder;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static java.lang.Integer.MAX_VALUE;
@@ -13,6 +14,9 @@ import static java.lang.Math.min;
 
 @Builder
 public class TablePrinter {
+
+    public static TablePrinter DefaultTablePrinter = TablePrinter.builder().build();
+
     @Builder.Default
     private String nullValue = "";
     @Builder.Default
@@ -25,6 +29,8 @@ public class TablePrinter {
     private int endRow = MAX_VALUE;
     @Builder.Default
     private boolean horizontalDividers = false;
+    @Builder.Default
+    private boolean rowNumbers = false;
 
     private class TableString {
         private int[] cellWidths;
@@ -32,11 +38,15 @@ public class TablePrinter {
 
         public String toString(Table table) {
             List<Iterable<String>> rows = rows(table);
+            Iterable<String> headers = table.getHeaders();
+            if (rowNumbers)
+                headers = concat("#", headers);
+
             sb = new StringBuilder(rows.size() * 128);
-            cellWidths = cellWidths(table.getHeaders(), rows);
+            cellWidths = cellWidths(headers, rows);
 
             printTopEdge();
-            printHeaders(table.getHeaders());
+            printHeaders(headers);
             printUnderHeaders(rows.isEmpty());
 
             if (!rows.isEmpty()) {
@@ -120,12 +130,37 @@ public class TablePrinter {
             if (table.getRows() != null) {
                 int i = 0;
                 for (Iterable<String> row : table.getRows()) {
-                    if (i >= startRow && i <= endRow)
-                        rows.add(row);
+                    if (i >= startRow && i <= endRow) {
+                        if (rowNumbers)
+                            rows.add(concat(Integer.toString(i), row));
+                        else
+                            rows.add(row);
+                    }
                     i++;
                 }
             }
             return rows;
+        }
+
+        private Iterable<String> concat(String s, Iterable<String> iterable) {
+            return () -> new Iterator<String>() {
+                private Iterator<String> iterator = iterable.iterator();
+                private boolean firstElement = true;
+
+                @Override
+                public boolean hasNext() {
+                    return firstElement ? true : iterator.hasNext();
+                }
+
+                @Override
+                public String next() {
+                    if (firstElement) {
+                        firstElement = false;
+                        return s;
+                    }
+                    return iterator.next();
+                }
+            };
         }
 
         private int[] cellWidths(Iterable<String> headers, List<Iterable<String>> rows) {

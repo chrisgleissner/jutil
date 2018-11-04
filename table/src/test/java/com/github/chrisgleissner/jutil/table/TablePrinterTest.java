@@ -8,8 +8,9 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
 
+import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
@@ -17,27 +18,27 @@ import static org.junit.Assert.assertEquals;
 @Slf4j
 public class TablePrinterTest {
 
-    private static final List<String> HEADERS = newArrayList("id", "name", "age");
-    private static final List<List<String>> DATA = newArrayList(
-            newArrayList("1", "john", null),
-            newArrayList("2", "tom", "20"),
-            newArrayList("3", "verylongname", null),
-            newArrayList("4", "mary", "30"));
+    private static final Iterable<String> HEADERS = Arrays.asList("id", "name", "age");
+    private static final Iterable<Iterable<String>> DATA = Arrays.asList(
+            Arrays.asList("1", "john", null),
+            Arrays.asList("2", "tom", "20"),
+            Arrays.asList("3", "verylongname", null),
+            Arrays.asList("4", "mary", "30"));
 
 
     @Test
     public void nullHeaders() {
-        assertEquals("", TablePrinter.builder().build().print(null, newArrayList()));
+        assertEquals("", DefaultTablePrinter.print(null, newArrayList()));
     }
 
     @Test
     public void asciiNullData() throws IOException {
-        assertTable("asciiNoData", TablePrinter.builder().build().print(HEADERS, null));
+        assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, null));
     }
 
     @Test
     public void asciiNoData() throws IOException {
-        assertTable("asciiNoData", TablePrinter.builder().build().print(HEADERS, newArrayList()));
+        assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, newArrayList()));
     }
 
     @Test
@@ -53,6 +54,16 @@ public class TablePrinterTest {
     @Test
     public void utfHorizontalDividers() throws IOException {
         assertTable("utfHorizontalDividers", TablePrinter.builder().horizontalDividers(true).tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA));
+    }
+
+    @Test
+    public void asciiLineNumbers() throws IOException {
+        assertTable("asciiLineNumbers", TablePrinter.builder().rowNumbers(true).startRow(2).build().print(HEADERS, DATA));
+    }
+
+    @Test
+    public void utfLineNumbers() throws IOException {
+        assertTable("utfLineNumbers", TablePrinter.builder().tableFormat(new Utf8TableFormat()).rowNumbers(true).build().print(HEADERS, DATA));
     }
 
     @Test
