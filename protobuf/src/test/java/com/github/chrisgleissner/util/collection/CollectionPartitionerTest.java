@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.gleissner.jutil.collection;
+package com.github.chrisgleissner.util.collection;
 
 import org.junit.Test;
 
@@ -24,19 +24,18 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static uk.gleissner.jutil.collection.CollectionPartitioner.partition;
 
 public class CollectionPartitionerTest {
 
     @Test
     public void canPartition() {
-        assertThat(partition(list(1, 2, 3, 4, 5), (p, a) -> p.size() < 2),
+        assertThat(CollectionPartitioner.partition(list(1, 2, 3, 4, 5), (p, a) -> p.size() < 2),
                 is(newArrayList(list(1, 2), list(3, 4), list(5))));
     }
 
     @Test
     public void canPartitionEmptyList() {
-        assertThat(partition(list(), (p, a) -> p.size() < 2),
+        assertThat(CollectionPartitioner.partition(list(), (p, a) -> p.size() < 2),
                 is(newArrayList(list())));
     }
 

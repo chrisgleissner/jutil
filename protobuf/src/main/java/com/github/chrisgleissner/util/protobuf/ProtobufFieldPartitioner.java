@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.gleissner.jutil.protobuf;
+package com.github.chrisgleissner.util.protobuf;
 
+import com.github.chrisgleissner.util.collection.FieldPartitioner;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
-import uk.gleissner.jutil.collection.FieldPartitioner;
-import uk.gleissner.jutil.collection.FieldPartitioner.FieldAdder;
-import uk.gleissner.jutil.collection.FieldPartitioner.ObjectBuilder;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -44,9 +42,9 @@ public class ProtobufFieldPartitioner {
         checkArgument(repeatedField.isRepeated(), "repeatedField needs to be repeated but was %s", repeatedField.getType());
         checkArgument(maxMsgSizeInBytes > 0, "maxMsgSizeInBytes");
 
-        ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(repeatedField).build();
+        FieldPartitioner.ObjectBuilder<M> objectBuilder = () -> (M) msg.toBuilder().clearField(repeatedField).build();
 
-        FieldAdder<M, ?> fieldAdder = (m, f) -> {
+        FieldPartitioner.FieldAdder<M, ?> fieldAdder = (m, f) -> {
             M msgWithField = (M) m.toBuilder().addRepeatedField(repeatedField, f).build();
             if (msgWithField.getSerializedSize() <= maxMsgSizeInBytes || msgWithField.getRepeatedFieldCount(repeatedField) == 1)
                 return Optional.of(msgWithField);

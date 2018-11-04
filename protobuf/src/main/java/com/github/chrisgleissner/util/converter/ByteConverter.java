@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.gleissner.jutil.converter;
+package com.github.chrisgleissner.util.converter;
 
 import com.google.protobuf.Message;
 

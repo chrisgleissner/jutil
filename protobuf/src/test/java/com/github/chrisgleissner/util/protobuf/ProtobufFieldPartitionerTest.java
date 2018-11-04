@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.gleissner.jutil.protobuf;
+package com.github.chrisgleissner.util.protobuf;
 
+import com.github.chrisgleissner.util.converter.ByteConverter;
+import com.github.chrisgleissner.util.protobuf.TestProtos.Parent;
+import com.github.chrisgleissner.util.protobuf.TestProtos.Parent.Child;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import org.junit.Test;
 import org.slf4j.Logger;
-import uk.gleissner.jutil.converter.ByteConverter;
-import uk.gleissner.jutil.protobuf.TestProtos.Parent;
-import uk.gleissner.jutil.protobuf.TestProtos.Parent.Child;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 
+import static com.github.chrisgleissner.util.converter.ByteConverter.toSpacedHex;
+import static com.github.chrisgleissner.util.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
+import static com.github.chrisgleissner.util.protobuf.TestProtos.Parent.ID_FIELD_NUMBER;
 import static com.google.common.base.Strings.repeat;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.joining;
@@ -34,10 +37,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
-import static uk.gleissner.jutil.converter.ByteConverter.toSpacedHex;
-import static uk.gleissner.jutil.protobuf.ProtobufFieldPartitioner.partition;
-import static uk.gleissner.jutil.protobuf.TestProtos.Parent.CHILDREN_FIELD_NUMBER;
-import static uk.gleissner.jutil.protobuf.TestProtos.Parent.ID_FIELD_NUMBER;
 
 public class ProtobufFieldPartitionerTest {
 
@@ -51,7 +50,7 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2,3,4,5)).build();
         int maxPartitionSizeInBytes = 12;
 
-        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(
                 parentId, 1, 2),
@@ -74,7 +73,7 @@ public class ProtobufFieldPartitionerTest {
                         child(3, 30), child(4, 40), child(5, 50))).build();
         int maxPartitionSizeInBytes = 100;
 
-        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents.size(), is(3));
         Iterator<Parent> iterator = parents.iterator();
@@ -91,7 +90,7 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
         int maxPartitionSizeInBytes = 1;
 
-        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(
                 parentId, 1),
@@ -106,7 +105,7 @@ public class ProtobufFieldPartitionerTest {
         Parent parent = Parent.newBuilder().setId(parentId).addAllChildren(children(1,2)).build();
         int maxPartitionSizeInBytes = 1000;
 
-        Collection<Parent> parents = partition(parent, childrenField, maxPartitionSizeInBytes);
+        Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, maxPartitionSizeInBytes);
 
         assertThat(parents, is(newArrayList(parent(parentId, 1, 2))));
 
@@ -116,26 +115,26 @@ public class ProtobufFieldPartitionerTest {
     @Test
     public void canPartitionEmptyField() {
         Parent parent = Parent.newBuilder().setId(100).build();
-        Collection<Parent> parents = partition(parent, childrenField, 1000);
+        Collection<Parent> parents = ProtobufFieldPartitioner.partition(parent, childrenField, 1000);
         assertThat(parents, is(newArrayList(parent(100))));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void throwsExceptionIfNotRepeatedField() {
         Parent parent = Parent.newBuilder().build();
-        partition(parent, idField, 1L);
+        ProtobufFieldPartitioner.partition(parent, idField, 1L);
     }
 
     @Test(expected = NullPointerException.class)
     public void throwsExceptionIfMsgIsNull() {
         Parent parent = Parent.newBuilder().build();
-        partition(null, childrenField, 1L);
+        ProtobufFieldPartitioner.partition(null, childrenField, 1L);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void throwsExceptionIfMaxSizeInBytesIsSmallerThanOne() {
         Parent parent = Parent.newBuilder().build();
-        partition(parent, childrenField, 0L);
+        ProtobufFieldPartitioner.partition(parent, childrenField, 0L);
     }
 
     private Collection<Child> children(int... ids) {
