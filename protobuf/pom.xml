@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>com.github.chrisgleissner</groupId>
-    <artifactId>util-protobuf</artifactId>
+    <artifactId>jutil-protobuf</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>util-protobuf</name>
+    <name>jutil-protobuf</name>
     <description>Java Protobuf Utilities</description>
 
     <properties>
