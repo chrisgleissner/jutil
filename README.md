@@ -111,13 +111,14 @@ Likewise, if you have very long columns, you can limit their printed lengths wit
 ### 3rd Party Adapters
 
 Any data structure that implements the [Table](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/Table.java) interface
-can be printed.
-
-Various adapters for this interface are already available:
+can be printed and various adapters for this interface are available:
 
 <a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">DB ResultSet</a>:
 ```java
-String s = DefaultTablePrinter.print(new ResultSetTable(conn.createStatement().executeQuery("select * from foo"))));
+Class.forName("org.h2.Driver");
+Connection conn = DriverManager.getConnection("jdbc:h2:mem:test", "sa", "");
+String s = DefaultTablePrinter.print(
+        new ResultSetTable(conn.createStatement().executeQuery("select * from foo"))));
 ```
 
 <a href="https://www.univocity.com/pages/about-parsers">Univocity CSV Parser</a> 
@@ -125,14 +126,14 @@ String s = DefaultTablePrinter.print(new ResultSetTable(conn.createStatement().e
 CsvParserSettings settings = new CsvParserSettings();
 settings.setHeaderExtractionEnabled(true);
 CsvParser parser = new CsvParser(settings);
-String s = DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(new File("sample.csv"))));
+String s = DefaultTablePrinter.print(
+        UnivocityTable.of(parser.iterateRecords(new File("sample.csv"))));
 ```
 
 <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV Parser</a>
 ```java
 String s = DefaultTablePrinter.print(
-    new ApacheCsvTable(
-        CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(
-                new FileReader(new File("sample.csv")))))
+    new ApacheCsvTable(CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(
+        new FileReader(new File("sample.csv")))))
                 
 ```
