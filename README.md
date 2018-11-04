@@ -42,13 +42,13 @@ Maven Dependency:
 </dependency>
 ```
 
-The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
+The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
 serializes a table to a pretty-printed string, either using ASCII or UTF borders.
 
 A table consists of a header and a random number of rows and these can can be specified as an `Iterable<String>` header and `Iterable<Iterable<String>>` rows. 
 
 Alternatively, you can 
-extend your existing data structure to implement the [Table](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/table/Table.java) interface.
+extend your existing data structure to implement the [Table](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/Table.java) interface.
 
 For example
 ```java
@@ -69,22 +69,32 @@ results in:
 Alternatively, you can configure the printer whereby
 ```java
 Iterable<String> headers = Arrays.asList("firstName", "lastName");
-Iterable<Iterable<String>> rows = Arrays.asList(Arrays.asList("john", "doe"), Arrays.asList("joe", null));
-String tableString = TablePrinter.builder()
+Iterable<Iterable<String>> rows = Arrays.asList(
+        Arrays.asList("Tom", "Selleck"), 
+        Arrays.asList("John", "Hillerman"),
+        Arrays.asList("Roger E.", null), 
+        Arrays.asList("Larry", "Manetti"));
+
+System.out.println(TablePrinter.builder()
         .horizontalDividers(true)
         .nullValue("n/a")
         .tableFormat(new Utf8TableFormat())
         .rowNumbers(true)
         .startRow(1)
+        .endRow(3)
         .maxCellWidth(5)
-        .build().print(headers, rows);
+        .build().print(headers, rows));
 ```
 results in:
 ```
 ╔═══╤═══════╤═══════╗
 ║ # │ first │ lastN ║
 ╠═══╪═══════╪═══════╣
-║ 1 │ joe   │ n/a   ║
+║ 1 │ John  │ Hille ║
+╟───┼───────┼───────╢
+║ 2 │ Roger │ n/a   ║
+╟───┼───────┼───────╢
+║ 3 │ Larry │ Manet ║
 ╚═══╧═══════╧═══════╝
 ```
 
