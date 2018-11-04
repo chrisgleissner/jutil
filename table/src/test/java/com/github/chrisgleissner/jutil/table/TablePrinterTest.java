@@ -1,18 +1,14 @@
 package com.github.chrisgleissner.jutil.table;
 
 import com.github.chrisgleissner.jutil.table.format.Utf8TableFormat;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
+import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 import static com.google.common.collect.Lists.newArrayList;
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 
 @Slf4j
@@ -32,53 +28,49 @@ public class TablePrinterTest {
     }
 
     @Test
-    public void asciiNullData() throws IOException {
+    public void asciiNullData() {
         assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, null));
     }
 
     @Test
-    public void asciiNoData() throws IOException {
+    public void asciiNoData() {
         assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, newArrayList()));
     }
 
     @Test
-    public void utfNoData() throws IOException {
+    public void utfNoData() {
         assertTable("utfNoData", TablePrinter.builder().tableFormat(new Utf8TableFormat()).build().print(HEADERS, newArrayList()));
     }
 
     @Test
-    public void asciiHorizontalDividers() throws IOException {
+    public void asciiHorizontalDividers() {
         assertTable("asciiHorizontalDividers", TablePrinter.builder().horizontalDividers(true).build().print(HEADERS, DATA));
     }
 
     @Test
-    public void utfHorizontalDividers() throws IOException {
+    public void utfHorizontalDividers() {
         assertTable("utfHorizontalDividers", TablePrinter.builder().horizontalDividers(true).tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA));
     }
 
     @Test
-    public void asciiLineNumbers() throws IOException {
+    public void asciiLineNumbers() {
         assertTable("asciiLineNumbers", TablePrinter.builder().rowNumbers(true).startRow(2).build().print(HEADERS, DATA));
     }
 
     @Test
-    public void utfLineNumbers() throws IOException {
+    public void utfLineNumbers() {
         assertTable("utfLineNumbers", TablePrinter.builder().tableFormat(new Utf8TableFormat()).rowNumbers(true).build().print(HEADERS, DATA));
     }
 
     @Test
-    public void ascii() throws IOException {
+    public void ascii() {
         assertTable("ascii", TablePrinter.builder().nullValue("n/a").maxCellWidth(8).build().print(HEADERS, DATA));
     }
 
     @Test
-    public void utf() throws IOException {
+    public void utf() {
         assertTable("utf", TablePrinter.builder().nullValue("").maxCellWidth(10)
                 .startRow(1).endRow(3)
                 .tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA));
-    }
-
-    private void assertTable(String expectedFileNameWithoutSuffix, String actualTableString) throws IOException {
-        assertEquals(Files.asCharSource(new File(format("src/test/resources/%s.txt", expectedFileNameWithoutSuffix)), Charsets.UTF_8).read(), actualTableString);
     }
 }

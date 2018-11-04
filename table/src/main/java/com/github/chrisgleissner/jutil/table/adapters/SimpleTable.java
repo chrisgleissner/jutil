@@ -1,5 +1,6 @@
-package com.github.chrisgleissner.jutil.table;
+package com.github.chrisgleissner.jutil.table.adapters;
 
+import com.github.chrisgleissner.jutil.table.Table;
 import lombok.Data;
 
 @Data

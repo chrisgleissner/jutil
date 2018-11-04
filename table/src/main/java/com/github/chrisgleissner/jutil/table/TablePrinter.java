@@ -1,5 +1,6 @@
 package com.github.chrisgleissner.jutil.table;
 
+import com.github.chrisgleissner.jutil.table.adapters.SimpleTable;
 import com.github.chrisgleissner.jutil.table.format.AsciiTableFormat;
 import com.github.chrisgleissner.jutil.table.format.TableFormat;
 import lombok.Builder;
@@ -42,6 +43,9 @@ public class TablePrinter {
         public String toString(Table table) {
             List<Iterable<String>> rows = rows(table);
             Iterable<String> headers = table.getHeaders();
+            if (headers == null)
+                return "";
+
             if (rowNumbers)
                 headers = concat("#", headers);
 
@@ -192,7 +196,7 @@ public class TablePrinter {
     }
 
     public String print(Table table) {
-        return table.getHeaders() == null ? "" : new TableString().toString(table);
+        return new TableString().toString(table);
     }
 
     public String print(Iterable<String> headers, Iterable<? extends Iterable<String>> data) {

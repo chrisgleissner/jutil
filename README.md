@@ -30,7 +30,16 @@ Example:
 Collection<Message> msgs = ProtbufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
 ```
 
-## Table
+## Table Printer
+
+### Getting Started
+
+The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
+serializes a table to a pretty-printed string, either using ASCII or UTF borders.
+
+A table consists of a header and a random number of rows. These can can be specified as an `Iterable<String>` header 
+and `Iterable<Iterable<String>>` rows. Adapters to various 3rd party frameworks are available, see below. 
+
 
 Maven Dependency:
 
@@ -42,15 +51,8 @@ Maven Dependency:
 </dependency>
 ```
 
-The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
-serializes a table to a pretty-printed string, either using ASCII or UTF borders.
 
-A table consists of a header and a random number of rows and these can can be specified as an `Iterable<String>` header and `Iterable<Iterable<String>>` rows. 
-
-Alternatively, you can 
-extend your existing data structure to implement the [Table](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/Table.java) interface.
-
-For example
+Example:
 ```java
 Iterable<String> headers = Arrays.asList("firstName", "lastName");
 Iterable<Iterable<String>> rows = Arrays.asList(Arrays.asList("john", "doe"), Arrays.asList("joe", "doe"));
@@ -66,7 +68,10 @@ results in:
 +===========+==========+
 ```
 
-Alternatively, you can configure the printer whereby
+### Configuration
+
+The TablePrinter is fully configurable to customize your output:
+
 ```java
 Iterable<String> headers = Arrays.asList("firstName", "lastName");
 Iterable<Iterable<String>> rows = Arrays.asList(
@@ -102,3 +107,27 @@ As per the example above, if you have a very large data structure, you may want 
 to only print the specified range.
 
 Likewise, if you have very long columns, you can limit their printed lengths with the `maxCellWidth` method.
+
+### 3rd Party Adapters
+
+Any data structure that implements the [Table](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/Table.java) interface
+can be printed.
+
+Various adapters for this interface are already available:
+
+<a href="https://www.univocity.com/pages/about-parsers">Univocity</a>
+```java
+CsvParserSettings settings = new CsvParserSettings();
+settings.setHeaderExtractionEnabled(true);
+CsvParser parser = new CsvParser(settings);
+String s = DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(new File("sample.csv"))));
+```
+
+<a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a>
+```java
+String s = DefaultTablePrinter.print(
+    new ApacheCsvTable(
+        CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(
+                new FileReader(new File("sample.csv")))))
+                
+```
