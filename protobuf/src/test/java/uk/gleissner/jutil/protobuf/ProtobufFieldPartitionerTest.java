@@ -26,10 +26,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 
+import static com.google.common.base.Strings.repeat;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
