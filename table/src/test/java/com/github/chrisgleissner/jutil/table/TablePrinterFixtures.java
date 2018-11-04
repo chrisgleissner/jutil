@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TablePrinterFixtures {
 
-    public static final File CSV_FILE = new File("src/test/resources/csvSample.csv");
+    public static final File CSV_FILE = new File("src/test/resources/csv.csv");
 
     public static void assertTable(String expectedFileNameWithoutSuffix, String actualTableString) {
         try {

@@ -14,7 +14,7 @@ public class ApacheCsvTableTest {
 
     @Test
     public void iterable() throws IOException {
-        assertTable("csvSample", DefaultTablePrinter.print(
+        assertTable("csv", DefaultTablePrinter.print(
                 new ApacheCsvTable(CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(CSV_FILE)))));
     }
 }

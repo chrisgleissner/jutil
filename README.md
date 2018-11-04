@@ -115,7 +115,12 @@ can be printed.
 
 Various adapters for this interface are already available:
 
-<a href="https://www.univocity.com/pages/about-parsers">Univocity</a>
+<a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">DB ResultSet</a>:
+```java
+String s = DefaultTablePrinter.print(new ResultSetTable(conn.createStatement().executeQuery("select * from foo"))));
+```
+
+<a href="https://www.univocity.com/pages/about-parsers">Univocity CSV Parser</a> 
 ```java
 CsvParserSettings settings = new CsvParserSettings();
 settings.setHeaderExtractionEnabled(true);
@@ -123,7 +128,7 @@ CsvParser parser = new CsvParser(settings);
 String s = DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(new File("sample.csv"))));
 ```
 
-<a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a>
+<a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV Parser</a>
 ```java
 String s = DefaultTablePrinter.print(
     new ApacheCsvTable(

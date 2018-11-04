@@ -22,11 +22,11 @@ public class UnivocityTableTest {
 
     @Test
     public void iteratable() {
-        assertTable("csvSample", DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(CSV_FILE))));
+        assertTable("csv", DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(CSV_FILE))));
     }
 
     @Test
     public void list() {
-        assertTable("csvSample", DefaultTablePrinter.print(UnivocityTable.of(parser.parseAllRecords(CSV_FILE))));
+        assertTable("csv", DefaultTablePrinter.print(UnivocityTable.of(parser.parseAllRecords(CSV_FILE))));
     }
 }
