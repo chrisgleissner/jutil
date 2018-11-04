@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <name>jutil</name>
+    <description>Java Utilities</description>
     <url>https://github.com/chrisgleissner/jutil</url>
     <inceptionYear>2018</inceptionYear>
 
