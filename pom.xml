@@ -54,6 +54,7 @@
 
     <modules>
         <module>protobuf</module>
+        <module>table</module>
     </modules>
 
     <dependencyManagement>
