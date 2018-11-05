@@ -26,7 +26,7 @@ To use them, simply declare a dependency towards the module you are interested i
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
-    <artifactId>jutil-jutil</artifactId>
+    <artifactId>jutil-table</artifactId>
     <version>1.0.3</version>
 </dependency>
 ```
