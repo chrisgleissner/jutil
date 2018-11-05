@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.github.chrisgleissner</groupId>
         <artifactId>jutil</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5-SNAPSHOT</version>
     </parent>
 
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
     <name>jutil-protobuf</name>
     <description>Java Protobuf Utilities</description>
 
