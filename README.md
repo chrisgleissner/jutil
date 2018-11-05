@@ -144,3 +144,11 @@ String s = DefaultTablePrinter.print(
         new FileReader(new File("sample.csv")))))
                 
 ```
+
+JavaBeans
+```java
+Iterable<Person> people = Arrays.asList(new Person("john", "doe", 30),
+        new Person("mary", "poppins", 40));
+String s = DefaultTablePrinter.print(new BeanTable(people))
+                
+```
