@@ -17,12 +17,9 @@ public class ResultSetTableTest {
         Class.forName("org.h2.Driver");
         Connection conn = DriverManager.getConnection("jdbc:h2:mem:test", "sa", "");
         Statement stmt = conn.createStatement();
-        stmt.executeUpdate("CREATE TABLE MagnumPiCast(first_name VARCHAR(255), last_name VARCHAR(255), PRIMARY KEY (first_name, last_name))");
-        stmt.executeUpdate("INSERT INTO MagnumPiCast(first_name, last_name) VALUES ('Tom', 'Selleck')");
-        stmt.executeUpdate("INSERT INTO MagnumPiCast(first_name, last_name) VALUES ('John', 'Hillerman')");
-        stmt.executeUpdate("INSERT INTO MagnumPiCast(first_name, last_name) VALUES ('Roger E.', 'Mosley')");
-        stmt.executeUpdate("INSERT INTO MagnumPiCast(first_name, last_name) VALUES ('Larry', 'Manetti')");
-        resultSet = stmt.executeQuery("select * from MagnumPiCast");
+        stmt.executeUpdate("CREATE TABLE MagnumPiCast(id INT, first_name VARCHAR(255), last_name VARCHAR(255), PRIMARY KEY (id))");
+        stmt.executeUpdate("INSERT INTO MagnumPiCast VALUES (1, 'Tom', 'Selleck'), (2, 'John', 'Hillerman'), (3, 'Roger E.', 'Mosley'), (4, 'Larry', 'Manetti')");
+        resultSet = stmt.executeQuery("SELECT * FROM MagnumPiCast");
     }
 
     @Test
