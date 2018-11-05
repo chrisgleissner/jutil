@@ -22,20 +22,20 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.0.3'
-compile 'com.github.chrisgleissner:jutil-table:1.0.3'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.0.4'
+compile 'com.github.chrisgleissner:jutil-table:1.0.4'
 ```
 
 ## Protobuf Utilities
