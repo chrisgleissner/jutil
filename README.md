@@ -4,12 +4,19 @@
 [![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil-protobuf)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
-Various Java utilities for Protobuf messages, pretty-printing of tables, etc.
+Java utilities for Protobuf partitioning and table pretty printing.
+
+Features:
+* Partitioning of Protobuf messages to remain below a configurable data size.
+* Pretty-printing of tables with many customization options and adapters for both CSV frameworks and DB ResultSets.
 
 
-## Protobuf
+## Installation
 
-Maven Dependency:
+The utilities are packaged in several modules and require at least JDK 8. 
+To use them, simply declare a dependency towards the module you are interested in:
+
+### Maven
 
 ```xml
 <dependency>
@@ -17,7 +24,21 @@ Maven Dependency:
     <artifactId>jutil-protobuf</artifactId>
     <version>1.0.3</version>
 </dependency>
+<dependency>
+    <groupId>com.github.chrisgleissner</groupId>
+    <artifactId>jutil-jutil</artifactId>
+    <version>1.0.3</version>
+</dependency>
 ```
+
+### Gradle
+
+```
+compile 'com.github.chrisgleissner:jutil-protobuf:1.0.3'
+compile 'com.github.chrisgleissner:jutil-table:1.0.3'
+```
+
+## Protobuf Utilities
 
 The [ProtobufFieldPartitioner](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/protobuf/ProtobufFieldPartitioner.java) 
 is useful for distributing the elements of a repeated field in a Protobuf message over multiple newly created messages. 
@@ -32,25 +53,11 @@ Collection<Message> msgs = ProtbufFieldPartitioner.partition(msg, repeatedFieldT
 
 ## Table Printer
 
-### Getting Started
-
 The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
 serializes a table to a pretty-printed string, either using ASCII or UTF borders.
 
 A table consists of a header and a random number of rows. These can can be specified as an `Iterable<String>` header 
 and `Iterable<Iterable<String>>` rows. Adapters to various 3rd party frameworks are available, see below. 
-
-
-Maven Dependency:
-
-```xml
-<dependency>
-    <groupId>com.github.chrisgleissner</groupId>
-    <artifactId>jutil-table</artifactId>
-    <version>1.0.3</version>
-</dependency>
-```
-
 
 Example:
 ```java
