@@ -17,7 +17,9 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 /**
- * Pretty prints a table.
+ * Pretty prints a table. A table consists of an optional header, followed by a random number of rows. Ideally, the number
+ * of columns in the header and in each row should be identical, but the printer handles diverging number of columns
+ * by padding missing data.
  */
 @Builder
 public class TablePrinter {
@@ -232,6 +234,12 @@ public class TablePrinter {
         }
     }
 
+    /**
+     * Prints the headers and data exposed by the specified TableProvider to the specified OutputStream.
+     *
+     * @param tableProvider that describes the table to print
+     * @return String representation of the table
+     */
     public String print(TableProvider tableProvider) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             print(tableProvider, baos);
@@ -241,14 +249,36 @@ public class TablePrinter {
         }
     }
 
+    /**
+     * Prints the specified headers and data to a string.
+     *
+     * @param headers describes the table's columns. Should have the same number of columns as each of the data rows.
+     * @param data describes the table's rows. Each element in the outer Iterable is a row and each element in the inner
+     *             Iterable represents this row's columns.
+     * @return String representation of the headers and data
+     */
     public String print(Iterable<String> headers, Iterable<? extends Iterable<String>> data) {
         return print(new SimpleTableProvider(headers, data));
     }
 
+    /**
+     * Prints the headers and data exposed by the specified TableProvider to the specified OutputStream.
+     *
+     * @param tableProvider that describes the table to print
+     * @param os to which the String representation of the table will be written
+     */
     public void print(TableProvider tableProvider, OutputStream os) {
         new TableString().write(tableProvider, os);
     }
 
+    /**
+     * Prints the specified headers and data to the specified OutputStream.
+     *
+     * @param headers describes the table's columns. Should have the same number of columns as each of the data rows.
+     * @param data describes the table's rows. Each element in the outer Iterable is a row and each element in the inner
+     *             Iterable represents this row's columns.
+     * @param os to which the String representation of the headers and data will be written
+     */
     public void print(Iterable<String> headers, Iterable<? extends Iterable<String>> data, OutputStream os) {
         print(new SimpleTableProvider(headers, data), os);
     }
