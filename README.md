@@ -22,20 +22,20 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.0</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.0.4'
-compile 'com.github.chrisgleissner:jutil-table:1.0.4'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.0'
+compile 'com.github.chrisgleissner:jutil-table:1.1.0'
 ```
 
 ## Protobuf Utilities
@@ -48,7 +48,7 @@ This allows for sending a Protobuf message where size restrictions exist, for ex
 
 Example:
 ```java
-Collection<Message> msgs = ProtbufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
+Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
 ```
 
 ## Table Printer
