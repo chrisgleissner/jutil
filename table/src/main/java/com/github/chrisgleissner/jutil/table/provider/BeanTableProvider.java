@@ -1,6 +1,4 @@
-package com.github.chrisgleissner.jutil.table.adapters;
-
-import com.github.chrisgleissner.jutil.table.Table;
+package com.github.chrisgleissner.jutil.table.provider;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
@@ -11,11 +9,11 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
-public class BeanTable implements Table {
+public class BeanTableProvider implements TableProvider {
     private final Iterable<? extends Object> beans;
     private Map<String, Method> readMethodsByPropertyName = new HashMap<>();
 
-    public BeanTable(Iterable<? extends Object> beans) {
+    public BeanTableProvider(Iterable<? extends Object> beans) {
         this.beans = beans;
         try {
             if (beans.iterator().hasNext()) {

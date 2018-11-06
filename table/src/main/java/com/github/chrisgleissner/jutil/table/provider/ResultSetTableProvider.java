@@ -1,18 +1,16 @@
-package com.github.chrisgleissner.jutil.table.adapters;
-
-import com.github.chrisgleissner.jutil.table.Table;
+package com.github.chrisgleissner.jutil.table.provider;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ResultSetTable implements Table {
+public class ResultSetTableProvider implements TableProvider {
 
     private ResultSet rs;
     private final int columnCount;
 
-    public ResultSetTable(ResultSet resultSet) {
+    public ResultSetTableProvider(ResultSet resultSet) {
         try {
             this.rs = resultSet;
             this.columnCount = rs.getMetaData().getColumnCount();

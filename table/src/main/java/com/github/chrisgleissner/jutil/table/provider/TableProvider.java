@@ -1,6 +1,6 @@
-package com.github.chrisgleissner.jutil.table;
+package com.github.chrisgleissner.jutil.table.provider;
 
-public interface Table {
+public interface TableProvider {
     Iterable<String> getHeaders();
 
     Iterable<? extends Iterable<String>> getRows();

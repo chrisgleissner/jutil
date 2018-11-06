@@ -1,4 +1,4 @@
-package com.github.chrisgleissner.jutil.table.adapters;
+package com.github.chrisgleissner.jutil.table.provider;
 
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
@@ -9,7 +9,7 @@ import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePri
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.CSV_FILE;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 
-public class UnivocityTableTest {
+public class UnivocityTableProviderTest {
 
     private CsvParser parser;
 
@@ -22,11 +22,11 @@ public class UnivocityTableTest {
 
     @Test
     public void iteratable() {
-        assertTable("csv", DefaultTablePrinter.print(UnivocityTable.of(parser.iterateRecords(CSV_FILE))));
+        assertTable("csv", DefaultTablePrinter.print(UnivocityTableProvider.of(parser.iterateRecords(CSV_FILE))));
     }
 
     @Test
     public void list() {
-        assertTable("csv", DefaultTablePrinter.print(UnivocityTable.of(parser.parseAllRecords(CSV_FILE))));
+        assertTable("csv", DefaultTablePrinter.print(UnivocityTableProvider.of(parser.parseAllRecords(CSV_FILE))));
     }
 }

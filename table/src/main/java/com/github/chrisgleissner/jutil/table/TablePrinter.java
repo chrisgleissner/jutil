@@ -1,13 +1,16 @@
 package com.github.chrisgleissner.jutil.table;
 
-import com.github.chrisgleissner.jutil.table.adapters.SimpleTable;
+import com.github.chrisgleissner.jutil.table.provider.SimpleTableProvider;
+import com.github.chrisgleissner.jutil.table.provider.TableProvider;
 import com.github.chrisgleissner.jutil.table.format.AsciiTableFormat;
 import com.github.chrisgleissner.jutil.table.format.TableFormat;
 import lombok.Builder;
+import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.*;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.max;
@@ -37,35 +40,27 @@ public class TablePrinter {
     private boolean rowNumbers = false;
 
     private class TableString {
-        private int[] cellWidths;
-        private StringBuilder sb;
+        private TableData tableData;
+        private PrintWriter pw;
 
-        public String toString(Table table) {
-            List<Iterable<String>> rows = rows(table);
-            Iterable<String> headers = table.getHeaders();
-            if (headers == null)
-                return "";
+        public void write(TableProvider tableProvider, OutputStream os) {
+            this.pw = new PrintWriter(os);
+            tableData = new TableData(tableProvider);
+            if (tableData.exists()) {
+                printTopEdge();
+                printHeaders(tableData.getHeaders());
+                printUnderHeaders(tableData.getRows().isEmpty());
 
-            if (rowNumbers)
-                headers = concat("#", headers);
-
-            sb = new StringBuilder(rows.size() * 128);
-            cellWidths = cellWidths(headers, rows);
-
-            printTopEdge();
-            printHeaders(headers);
-            printUnderHeaders(rows.isEmpty());
-
-            if (!rows.isEmpty()) {
-                for (int i = 0; i < rows.size(); i++) {
-                    if (i > 0 && horizontalDividers)
-                        printHorizontalDivider();
-                    printRow(rows.get(i));
+                if (!tableData.getRows().isEmpty()) {
+                    for (int i = 0; i < tableData.getRows().size(); i++) {
+                        if (i > 0 && horizontalDividers)
+                            printHorizontalDivider();
+                        printRow(tableData.getRows().get(i));
+                    }
+                    printBottomEdge();
                 }
-                printBottomEdge();
             }
-
-            return sb.toString();
+            pw.flush();
         }
 
         private void printRow(Iterable<String> row) {
@@ -79,21 +74,26 @@ public class TablePrinter {
         }
 
         private void print(char left, char divider, char right, Iterable<String> cells) {
-            sb.append(left);
-            int i = 0;
-            for (String cell : cells) {
+            pw.append(left);
+            Iterator<String> cellIterator = cells.iterator();
+            for (int i = 0; i < tableData.numberOfCellWidths(); i++) {
                 if (i > 0)
-                    sb.append(divider);
-                sb.append(' ');
+                    pw.append(divider);
+                pw.append(' ');
+
+                String cell = null;
+                if (cellIterator.hasNext())
+                    cell = cellIterator.next();
                 cell = cell == null ? nullValue : cell;
-                sb.append(cell, 0, min(maxCellWidth, cell.length()));
-                for (int i1 = 0; i1 < cellWidths[i] - cellLength(cell); i1++)
-                    sb.append(' ');
-                sb.append(' ');
-                i++;
+                pw.append(cell, 0, min(maxCellWidth, cell.length()));
+
+                for (int j = 0; j < tableData.getCellWidth(i) - cellLength(cell); j++)
+                    pw.append(' ');
+
+                pw.append(' ');
             }
-            sb.append(right);
-            sb.append('\n');
+            pw.append(right);
+            pw.append('\n');
         }
 
         private void printHorizontalDivider() {
@@ -121,22 +121,79 @@ public class TablePrinter {
         }
 
         private void printHorizontalLine(char left, char divider, char middle, char right) {
-            sb.append(left);
-            for (int i = 0; i < cellWidths.length; i++) {
+            pw.append(left);
+            for (int i = 0; i < tableData.numberOfCellWidths(); i++) {
                 if (i > 0)
-                    sb.append(divider);
-                for (int i1 = 0; i1 < cellWidths[i] + 2; i1++)
-                    sb.append(middle);
+                    pw.append(divider);
+                for (int j = 0; j < tableData.getCellWidth(i) + 2; j++)
+                    pw.append(middle);
             }
-            sb.append(right);
-            sb.append('\n');
+            pw.append(right);
+            pw.append('\n');
+        }
+    }
+
+    private int cellLength(String s) {
+        return min(maxCellWidth, (s == null ? nullValue : s).length());
+    }
+
+    @Data
+    private class TableData {
+        private final Map<Integer, Integer> cellWidths = new TreeMap<>();
+        private final List<String> headers;
+        private final List<Iterable<String>> rows;
+
+        private TableData(TableProvider tableProvider) {
+            rows = prepareRows(tableProvider);
+            updateCellWidthsForRows();
+
+            headers = prepareHeaders(tableProvider);
+            updateCellWidthsForHeaders();
         }
 
-        private List<Iterable<String>> rows(Table table) {
-            List<Iterable<String>> rows = new ArrayList<>();
-            if (table.getRows() != null) {
+        private List<String> prepareHeaders(TableProvider tableProvider) {
+            Iterable<String> headerIteratable = tableProvider.getHeaders();
+            List<String> headers = new ArrayList<>();
+            if (rowNumbers)
+                headers.add("#");
+            if (headerIteratable != null)
+                headerIteratable.iterator().forEachRemaining(headers::add);
+            for (int i = headers.size(); i < cellWidths.size(); i++)
+                headers.add("" + i);
+            return headers;
+        }
+
+        private void updateCellWidthsForRows() {
+            for (Iterable<String> row : rows) {
                 int i = 0;
-                for (Iterable<String> row : table.getRows()) {
+                for (String cell : row)
+                    setCellWidth(i++, cellLength(cell));
+            }
+        }
+
+        private void updateCellWidthsForHeaders() {
+            int i = 0;
+            for (String header : headers)
+                setCellWidth(i++, cellLength(header));
+        }
+
+        private void setCellWidth(int index, int length) {
+            cellWidths.put(index, max(cellWidths.getOrDefault(index, 0), length));
+        }
+
+        private int numberOfCellWidths() {
+            return cellWidths.size();
+        }
+
+        private int getCellWidth(int index) {
+            return cellWidths.get(index);
+        }
+
+        private List<Iterable<String>> prepareRows(TableProvider tableProvider) {
+            List<Iterable<String>> rows = new ArrayList<>();
+            if (tableProvider.getRows() != null) {
+                int i = 0;
+                for (Iterable<String> row : tableProvider.getRows()) {
                     if (i >= startRow && i <= endRow) {
                         if (rowNumbers)
                             rows.add(concat(Integer.toString(i), row));
@@ -170,36 +227,29 @@ public class TablePrinter {
             };
         }
 
-        private int[] cellWidths(Iterable<String> headers, List<Iterable<String>> rows) {
-            int[] cellWidths = new int[size(headers)];
-            int i = 0;
-            for (String header : headers)
-                cellWidths[i] = max(cellWidths[i++], cellLength(header));
-            for (Iterable<String> row : rows) {
-                i = 0;
-                for (String cell : row)
-                    cellWidths[i] = max(cellWidths[i++], cellLength(cell));
-            }
-            return cellWidths;
+        private boolean exists() {
+            return !(headers.isEmpty() && rows.isEmpty());
         }
     }
 
-    private int size(Iterable<? extends Object> it) {
-        int size = 0;
-        for (Object o : it)
-            size++;
-        return size;
-    }
-
-    private int cellLength(String s) {
-        return min(maxCellWidth, (s == null ? nullValue : s).length());
-    }
-
-    public String print(Table table) {
-        return new TableString().toString(table);
+    public String print(TableProvider tableProvider) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            print(tableProvider, baos);
+            return baos.toString("UTF-8");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to print table", e);
+        }
     }
 
     public String print(Iterable<String> headers, Iterable<? extends Iterable<String>> data) {
-        return print(new SimpleTable(headers, data));
+        return print(new SimpleTableProvider(headers, data));
+    }
+
+    public void print(TableProvider tableProvider, OutputStream os) {
+        new TableString().write(tableProvider, os);
+    }
+
+    public void print(Iterable<String> headers, Iterable<? extends Iterable<String>> data, OutputStream os) {
+        print(new SimpleTableProvider(headers, data), os);
     }
 }

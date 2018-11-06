@@ -1,6 +1,5 @@
-package com.github.chrisgleissner.jutil.table.adapters;
+package com.github.chrisgleissner.jutil.table.provider;
 
-import com.github.chrisgleissner.jutil.table.Table;
 import com.univocity.parsers.common.IterableResult;
 import com.univocity.parsers.common.ParsingContext;
 import com.univocity.parsers.common.record.Record;
@@ -10,21 +9,21 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static java.util.stream.StreamSupport.stream;
 
-public class UnivocityTable {
+public class UnivocityTableProvider {
 
-    public static Table of(IterableResult<Record, ParsingContext> records) {
-        return new IterableTable(records);
+    public static TableProvider of(IterableResult<Record, ParsingContext> records) {
+        return new IterableTableProvider(records);
     }
 
-    public static Table of(Iterable<Record> records) {
-        return new ListTable(records);
+    public static TableProvider of(Iterable<Record> records) {
+        return new ListTableProvider(records);
     }
 
-    private static class IterableTable implements Table {
+    private static class IterableTableProvider implements TableProvider {
 
         private final IterableResult<Record, ParsingContext> records;
 
-        private IterableTable(IterableResult<Record, ParsingContext> records) {
+        private IterableTableProvider(IterableResult<Record, ParsingContext> records) {
             this.records = records;
         }
 
@@ -39,11 +38,11 @@ public class UnivocityTable {
         }
     }
 
-    private static class ListTable implements Table {
+    private static class ListTableProvider implements TableProvider {
 
         private final Iterable<Record> records;
 
-        private ListTable(Iterable<Record> records) {
+        private ListTableProvider(Iterable<Record> records) {
             this.records = records;
         }
 

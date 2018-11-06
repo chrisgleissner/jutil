@@ -1,4 +1,4 @@
-package com.github.chrisgleissner.jutil.table.adapters;
+package com.github.chrisgleissner.jutil.table.provider;
 
 import org.apache.commons.csv.CSVFormat;
 import org.junit.Test;
@@ -10,11 +10,11 @@ import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePri
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.CSV_FILE;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 
-public class ApacheCsvTableTest {
+public class ApacheCsvTableProviderTest {
 
     @Test
     public void iterable() throws IOException {
         assertTable("csv", DefaultTablePrinter.print(
-                new ApacheCsvTable(CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(CSV_FILE)))));
+                new ApacheCsvTableProvider(CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(CSV_FILE)))));
     }
 }

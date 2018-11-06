@@ -1,6 +1,5 @@
-package com.github.chrisgleissner.jutil.table.adapters;
+package com.github.chrisgleissner.jutil.table.provider;
 
-import com.github.chrisgleissner.jutil.table.Table;
 import org.apache.commons.csv.CSVRecord;
 
 import java.util.Collection;
@@ -8,11 +7,11 @@ import java.util.Set;
 
 import static java.util.stream.StreamSupport.stream;
 
-public class ApacheCsvTable implements Table {
+public class ApacheCsvTableProvider implements TableProvider {
     private final Iterable<CSVRecord> records;
     private Set<String> headers;
 
-    public ApacheCsvTable(Iterable<CSVRecord> records) {
+    public ApacheCsvTableProvider(Iterable<CSVRecord> records) {
         this.records = records;
     }
 

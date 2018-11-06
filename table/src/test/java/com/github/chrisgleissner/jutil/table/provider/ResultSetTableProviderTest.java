@@ -1,4 +1,4 @@
-package com.github.chrisgleissner.jutil.table.adapters;
+package com.github.chrisgleissner.jutil.table.provider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -8,7 +8,7 @@ import java.sql.*;
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 
-public class ResultSetTableTest {
+public class ResultSetTableProviderTest {
 
     private ResultSet resultSet;
 
@@ -24,6 +24,6 @@ public class ResultSetTableTest {
 
     @Test
     public void works() {
-        assertTable("resultSet", DefaultTablePrinter.print(new ResultSetTable(resultSet)));
+        assertTable("resultSet", DefaultTablePrinter.print(new ResultSetTableProvider(resultSet)));
     }
 }

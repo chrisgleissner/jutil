@@ -4,6 +4,8 @@ import com.github.chrisgleissner.jutil.table.format.Utf8TableFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
@@ -72,5 +74,56 @@ public class TablePrinterTest {
         assertTable("utf", TablePrinter.builder().nullValue("").maxCellWidth(10)
                 .startRow(1).endRow(3)
                 .tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA));
+    }
+
+    @Test
+    public void nullHeadersWithNonEmptyData() {
+        assertTable("nullHeadersWithNonEmptyData", DefaultTablePrinter.print(null, DATA));
+
+    }
+
+    @Test
+    public void headerColumnCountTooLarge() {
+        Iterable<String> headers = Arrays.asList("id", "name", "age", "city");
+        Iterable<Iterable<String>> data = Arrays.asList(
+                Arrays.asList("1", "john", null),
+                Arrays.asList("2", "tom", "20"),
+                Arrays.asList("3", "verylongname", null),
+                Arrays.asList("4", "mary", "30"));
+        assertTable("headerColumnCountTooLarge", DefaultTablePrinter.print(headers, data));
+
+    }
+
+    @Test
+    public void headerColumnCountTooLittle() {
+        Iterable<String> headers = Arrays.asList("id", "name");
+        Iterable<Iterable<String>> data = Arrays.asList(
+                Arrays.asList("1", "john", null),
+                Arrays.asList("2", "tom", "20"),
+                Arrays.asList("3", "verylongname", null),
+                Arrays.asList("4", "mary", "30"));
+        assertTable("headerColumnCountTooLittle", DefaultTablePrinter.print(headers, data));
+
+    }
+
+    @Test
+    public void rowColumnCountVaries() {
+        Iterable<String> headers = Arrays.asList("id", "name", "age");
+        Iterable<Iterable<String>> data = Arrays.asList(
+                Arrays.asList("1", "john", null),
+                Arrays.asList("2", "tom", "20", "munich"),
+                Arrays.asList("3", "verylongname", null),
+                Arrays.asList("4", "mary", "30", "orlando", "usa"));
+        assertTable("rowColumnCountVaries", DefaultTablePrinter.print(headers, data));
+    }
+
+    @Test
+    public void canWriteToOutputStream() throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            TablePrinter.builder().nullValue("").maxCellWidth(10)
+                    .startRow(1).endRow(3)
+                    .tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA, baos);
+            assertTable("utf", baos.toString("UTF-8"));
+        }
     }
 }
