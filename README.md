@@ -122,7 +122,7 @@ Likewise, if you have very long columns, you can limit their printed lengths wit
 Any data structure that implements the [TableProvider](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/provider/TableProvider.java) interface
 can be printed and various adapters for this interface are available:
 
-<a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">DB ResultSet</a>:
+<a href="https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html">DB ResultSet</a>
 ```java
 Class.forName("org.h2.Driver");
 Connection conn = DriverManager.getConnection("jdbc:h2:mem:test", "sa", "");
