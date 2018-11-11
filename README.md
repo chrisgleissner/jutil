@@ -97,6 +97,7 @@ System.out.println(TablePrinter.builder()
         .startRow(1)
         .endRow(3)
         .maxCellWidth(5)
+        .wraparound(false)
         .build().print(headers, rows));
 ```
 results in:
