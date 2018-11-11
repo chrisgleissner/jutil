@@ -22,20 +22,20 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.0'
-compile 'com.github.chrisgleissner:jutil-table:1.1.0'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.1'
+compile 'com.github.chrisgleissner:jutil-table:1.1.1'
 ```
 
 ## Protobuf Utilities
@@ -113,9 +113,9 @@ results in:
 ```
 
 As per the example above, if you have a very large data structure, you may want to use the `startRow` and `endRow` builder methods 
-to only print the specified range.
+to only print the specified range. You can also set the maximum cell width (defaults to 100) and control the wrap-aroud of long cells (enabled by default).
 
-Likewise, if you have very long columns, you can limit their printed lengths with the `maxCellWidth` method.
+Newlines are supported and tabs are rendered as 8 spaces.
 
 ### 3rd Party Adapters
 
