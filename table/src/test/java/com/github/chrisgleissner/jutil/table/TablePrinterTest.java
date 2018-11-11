@@ -77,6 +77,13 @@ public class TablePrinterTest {
     }
 
     @Test
+    public void utfWithoutWraparound() {
+        assertTable("utfWithoutWraparound", TablePrinter.builder().nullValue("").wraparound(false).maxCellWidth(10)
+                .startRow(1).endRow(3)
+                .tableFormat(new Utf8TableFormat()).build().print(HEADERS, DATA));
+    }
+
+    @Test
     public void nullHeadersWithNonEmptyData() {
         assertTable("nullHeadersWithNonEmptyData", DefaultTablePrinter.print(null, DATA));
 
@@ -91,7 +98,17 @@ public class TablePrinterTest {
                 Arrays.asList("3", "verylongname", null),
                 Arrays.asList("4", "mary", "30"));
         assertTable("headerColumnCountTooLarge", DefaultTablePrinter.print(headers, data));
+    }
 
+    @Test
+    public void newLinesAndWraparound() {
+        Iterable<String> headers = Arrays.asList("id", "name", "age", "city");
+        Iterable<Iterable<String>> data = Arrays.asList(
+                Arrays.asList("1", "johnWithVeryLong\tName", "15", "london"),
+                Arrays.asList("2", "tom\nWithNewLinesAndVeryLongName", "\n\n\n20", "\n\n\n\n\nmunich"),
+                Arrays.asList("3", "verylongname", null),
+                Arrays.asList("4", "mary", "30"));
+        assertTable("newLinesAndWraparound", TablePrinter.builder().maxCellWidth(10).build().print(headers, data));
     }
 
     @Test
