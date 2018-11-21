@@ -1,10 +1,10 @@
 # jutil
 
 [![Build Status](https://travis-ci.org/chrisgleissner/jutil.svg?branch=master)](https://travis-ci.org/chrisgleissner/jutil)
-[![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil-protobuf)
+[![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
-Java utilities for Protobuf partitioning and table pretty printing.
+Java utilities for Protobuf message partitioning and table pretty printing.
 
 Features:
 * Partitioning of Protobuf messages to remain below a configurable data size.
@@ -22,20 +22,20 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.1'
-compile 'com.github.chrisgleissner:jutil-table:1.1.1'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.2'
+compile 'com.github.chrisgleissner:jutil-table:1.1.2'
 ```
 
 ## Protobuf Utilities
