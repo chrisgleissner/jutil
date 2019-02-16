@@ -26,6 +26,11 @@ To use them, simply declare a dependency towards the module you are interested i
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
+    <artifactId>jutil-sql-log</artifactId>
+    <version>1.1.2</version>
+</dependency>
+<dependency>
+    <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
     <version>1.1.2</version>
 </dependency>
@@ -35,6 +40,7 @@ To use them, simply declare a dependency towards the module you are interested i
 
 ```
 compile 'com.github.chrisgleissner:jutil-protobuf:1.1.2'
+compile 'com.github.chrisgleissner:jutil-sql-log:1.1.2'
 compile 'com.github.chrisgleissner:jutil-table:1.1.2'
 ```
 
@@ -50,6 +56,23 @@ Example:
 ```java
 Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedFieldToBePartitioned, 100);
 ```
+
+## Sql Log
+
+The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
+records SQL executions in memory or to an OutputStream.
+
+This module assumes you are using Spring Boot 2.1.x and supports Spring Boot auto-configuration. 
+
+Simply declare a dependency on this module and ensure the property 
+`com.github.chrisgleissner.jutil.sqllog=true` is declared in your application.properties. This will prepare all 
+`DataSources` in your context for recording any SQL statements sent through them.
+
+To start recording, wire in the `SqlLog` bean and call its `startRecording(String id)` (heap recording) or 
+`startRecording(String id, OutputStream os)` (stream recording) methods. Recordings are formatted as JSON messages.
+
+To end recording, call `stopRecording(String id)`. If you used heap recording, this will also return a String collection
+of any SQL.
 
 ## Table Printer
 

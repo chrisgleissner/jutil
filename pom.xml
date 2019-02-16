@@ -55,6 +55,8 @@
     <modules>
         <module>protobuf</module>
         <module>table</module>
+        <module>sql-log</module>
+        <module>sql-log-example</module>
     </modules>
 
     <dependencyManagement>
