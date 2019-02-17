@@ -1,6 +1,7 @@
 package com.github.chrisgleissner.jutil.sqllog;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
@@ -24,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
-import static lombok.AccessLevel.PACKAGE;
 
 /**
  * Records SQL executions either on heap or by writing them to an OutputStream.
@@ -34,17 +34,33 @@ import static lombok.AccessLevel.PACKAGE;
  */
 @ToString
 @Slf4j
-@RequiredArgsConstructor(access = PACKAGE)
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
-    @ToString.Exclude private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
+    private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
+
+    @ToString.Exclude
+    private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
         protected void writeTimeEntry(StringBuilder sb, ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
         }
     };
-    @ToString.Exclude private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
-    private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
-    private final boolean sqlLogEnabled;
+
+    @ToString.Exclude
+    private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
+
+    @Getter
     private final boolean logQueries;
+
+    @Getter
     private final boolean traceMethods;
+
+    @Getter
+    @Setter
+    private boolean sqlLogEnabled;
+
+    SqlLog(boolean sqlLogEnabled, boolean logQueries, boolean traceMethods) {
+        this.sqlLogEnabled = sqlLogEnabled;
+        this.logQueries = logQueries;
+        this.traceMethods = traceMethods;
+    }
 
     /**
      * Starts a heap recording session for the specified ID. If a session with this ID is currently in progress,
@@ -59,7 +75,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     /**
      * Starts a stream recording session for the specified ID. If a session with this ID is currently in progress,
-     *      * it is stopped first.
+     * * it is stopped first.
      *
      * @param id under which the recordings will be tracked
      * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
@@ -132,7 +148,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
             ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean)
                     .connectionIdManager(new DefaultConnectionIdManager());
             if (this.traceMethods)
-                    builder.traceMethods();
+                builder.traceMethods();
             if (this.logQueries)
                 builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
             return builder.listener(this).build();
@@ -142,11 +158,12 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     @Override
     public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
-        String msg = logEntryCreator.getLogEntry(executionInfo, list, false, false);
-        Optional.ofNullable(currentRecording.get()).ifPresent(r -> {
-            r.add(msg);
-            log.debug("{}: {}", r.getId(), msg);
-
-        });
+        if (sqlLogEnabled) {
+            String msg = logEntryCreator.getLogEntry(executionInfo, list, false, false);
+            Optional.ofNullable(currentRecording.get()).ifPresent(r -> {
+                r.add(msg);
+                log.debug("{}: {}", r.getId(), msg);
+            });
+        }
     }
 }

@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class SqlLogTest {
 
+    public static final String REPO_FIND_ALL = "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}";
     @Autowired
     private PersonRepo repo;
 
@@ -72,11 +73,24 @@ public class SqlLogTest {
     }
 
     @Test
+    public void canDisableAndEnable() {
+        try {
+            sqlLog.setSqlLogEnabled(false);
+            repo.findAll();
+            assertThat(sqlLog.getAllLogs()).isEmpty();
+        } finally {
+            sqlLog.setSqlLogEnabled(true);
+            repo.findAll();
+            assertThat(sqlLog.getAllLogs()).containsExactly(REPO_FIND_ALL);
+        }
+    }
+
+
+    @Test
     public void getLogsContainingRegex() {
         repo.findAll();
         Collection<String> matchingLogs = sqlLog.getLogsContainingRegex("select.*?from person");
-        assertThat(matchingLogs).containsExactly(
-                "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}");
+        assertThat(matchingLogs).containsExactly(REPO_FIND_ALL);
     }
 
     @Test
@@ -87,7 +101,8 @@ public class SqlLogTest {
             repo.findAll();
             assertThat(recording.getMessages()).containsExactly(msg);
             repo.findByLastName("Bauer");
-            String[] msgs = {"{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}",
+            String[] msgs = {
+                    "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}",
                     "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_ where person0_.last_name=?\"], \"params\":[[\"Bauer\"]]}"};
             assertThat(recording.getMessages()).containsExactly(msgs);
         }
@@ -105,8 +120,8 @@ public class SqlLogTest {
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
             assertThat(jdbcTemplate.queryForObject("select count (*) from foo where id = 1", Integer.class)).isEqualTo(1);
-
-            String[] msgs = {"{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}",
+            String[] msgs = {
+                    "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into foo (id) values (1)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select count (*) from foo where id = 1\"], \"params\":[]}"};
             assertThat(sqlLog.getLogsContaining("table foo")).containsExactlyInAnyOrder(msgs);
@@ -175,7 +190,8 @@ public class SqlLogTest {
             assertThat(jdbcTemplate.queryForObject("select count (*) from foo where id = 1", Integer.class)).isEqualTo(1);
 
             Collection<String> matchingLogs = sqlLog.getLogsContaining("table foo");
-            String[] msgs = {"{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}",
+            String[] msgs = {
+                    "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into foo (id) values (1)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select count (*) from foo where id = 1\"], \"params\":[]}"};
             assertThat(matchingLogs).containsExactly(msgs);
