@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.stream.Collectors.joining;
 
+// TODO Merge with SqlExecutions
 @Slf4j
 class SqlExecutions {
     private final SqlRecording sqlRecording;
