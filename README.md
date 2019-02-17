@@ -65,12 +65,14 @@ records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x 
 
 To start recording:
 1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
-1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording` to track any messages 
+1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording`
 
-This will record all SQL messages sent via any DataSource bean in your context. The recording is kept either on heap or 
-written to the specified OutputStream. All SQL is JSON encoded. 
+This will record all SQL messages sent via any DataSource bean. The recording is kept either on heap (accessible
+via `SqlRecording.getMessages` and various methods in `SqlLog`) or written to the specified OutputStream. 
+All SQL is JSON encoded. 
 
-Call `stopRecording` or close the `SqlRecording` instance to stop the recording.
+Call `stopRecording` or close the `SqlRecording` instance to stop the recording. If recording to a stream, this will flush
+all messages and close the stream.
 
 Example:
 ```java
