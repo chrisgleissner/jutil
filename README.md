@@ -77,8 +77,8 @@ Example:
 @Configuration
 public class SampleConfig {
     SampleConfig(SqlLog sqlLog) throws FileNotFoundException {
-        try (FileOutputStream fos = new FileOutputStream(new File("sql.json")); 
-                SqlRecording recording = sqlLog.startRecording("sql", fos, Charset.forName("UTF-8"))) {
+        try (SqlRecording recording = sqlLog.startRecording("sql", 
+                new FileOutputStream(new File("sql.json")), Charset.forName("UTF-8"))) {
             // Interact with the DB
         }
         // Find all interactions in the sql.json file
