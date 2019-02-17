@@ -76,12 +76,12 @@ Example:
 ```java
 @Configuration
 public class SampleConfig {
-    SampleConfig(SqlLog sqlLog) throws FileNotFoundException {
+    SampleConfig(JdbcTemplate jdbcTemplate, SqlLog sqlLog) throws FileNotFoundException {
         try (SqlRecording recording = sqlLog.startRecording("sql", 
                 new FileOutputStream(new File("sql.json")), Charset.forName("UTF-8"))) {
-            // Interact with the DB
+            jdbcTemplate.execute("create table foo (id int)");
         }
-        // Find all interactions in the sql.json file
+        // 'create table foo (id int)' is now written to sql.json
     }
 }
 ```
