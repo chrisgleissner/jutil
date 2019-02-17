@@ -4,11 +4,12 @@
 [![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
-Java utilities for Protobuf message partitioning and table pretty printing.
+Java utilities for Protobuf message partitioning, table pretty printing and SQL execution recording.
 
 Features:
 * Partitioning of Protobuf messages to remain below a configurable data size.
 * Pretty-printing of tables with many customization options and adapters for both CSV frameworks and DB ResultSets.
+* Record all SQL executions sent via the DataSources in your Spring Boot application, either in memory or to disk.
 
 
 ## Installation
