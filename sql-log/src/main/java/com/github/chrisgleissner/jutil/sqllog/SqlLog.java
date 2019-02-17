@@ -19,22 +19,17 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 /**
  * Records SQL executions either on heap or by writing them to an OutputStream.
- *
- * <p>To start currentRecording SQL executions, use {@link #startRecording(String)} (on heap)
- * or {@link #startRecording(String, OutputStream, Charset)} (to stream). Stop currentRecording (and close the stream if currentRecording to stream)
- * via {@link #stopRecording(String)}.</p>
+ * To start recording SQL executions, use {@link #startRecording(String)} (on heap)
+ * or {@link #startRecording(String, OutputStream, Charset)} (to stream). This will return a {@link SqlRecording}.
+ * To stop recording, call {@link SqlRecording#close()}.</p>
  */
-@Getter
 @ToString
 @Slf4j
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
@@ -54,100 +49,73 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     }
 
     /**
-     * Starts a heap currentRecording session for the specified ID. If a session with this ID is currently in progress,
+     * Starts a heap recording session for the specified ID. If a session with this ID is currently in progress,
      * it is stopped first.
      *
      * @param id under which the recordings will be tracked
-     * @return recorded heap SQL logs for previous currentRecording of the specified ID, empty if no such currentRecording exists
+     * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
      */
-    public Collection<String> startRecording(String id) {
-        return setCurrentRecording(new SqlRecording(id, null, null));
+    public SqlRecording startRecording(String id) {
+        return startRecording(id, null, null);
     }
 
     /**
-     * Starts a stream currentRecording session for the specified ID. If a session with this ID is currently in progress,
+     * Starts a stream recording session for the specified ID. If a session with this ID is currently in progress,
      *      * it is stopped first.
      *
      * @param id under which the recordings will be tracked
-     * @return recorded heap SQL logs for previous currentRecording of the specified ID, empty if no such currentRecording exists
+     * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
      */
-    public Collection<String> startRecording(String id, OutputStream os, Charset charset) {
-        return setCurrentRecording(new SqlRecording(id, os, charset));
+    public SqlRecording startRecording(String id, OutputStream os, Charset charset) {
+        SqlRecording recording = new SqlRecording(this, id, os, charset);
+        currentRecording.set(recording);
+        recordingsById.put(recording.getId(), recording);
+        log.info("Started {} recording of SQL for ID {}", recording.isRecordToStreamEnabled() ? "stream" : "heap", recording.getId());
+        return recording;
     }
 
-    private Collection<String> setCurrentRecording(SqlRecording rec) {
-        Collection<String> messages = getMessagesForCurrentRecording();
-        currentRecording.set(rec);
-        if (rec == null) {
-            log.info("Stopped SQL currentRecording");
-        } else {
-            recordingsById.put(rec.getId(), rec);
-            log.info("Started {} currentRecording of SQL for ID {}", rec.isRecordToStreamEnabled() ? "stream" : "heap", rec.getId());
-        }
-        return messages;
-    }
-
-    private Collection<String> getMessagesForCurrentRecording() {
-        SqlRecording oldRecording = currentRecording.get();
-        Collection<String> messages = emptyList();
-        if (oldRecording != null) {
-            messages = Optional.ofNullable(recordingsById.remove(oldRecording.getId())).map(r -> r.getAll()).orElse(emptyList());
-            oldRecording.close();
-        }
-        return messages;
+    SqlRecording stopRecording(String id) {
+        SqlRecording recording = recordingsById.remove(id);
+        currentRecording.set(null);
+        log.info("Stopped recording of SQL for ID {}. Found {} message(s) on heap.", id, recording.size());
+        return recording;
     }
 
     /**
-     * Stops a currently active currentRecording session with the specified ID.
-     *
-     * @param id of a currently active currentRecording
-     * @return recorded heap SQL logs for previous currentRecording of the specified ID, empty if no such currentRecording exists
-     */
-    public Collection<String> stopRecording(String id) {
-        Collection<String> messages = setCurrentRecording(null);
-        log.info("Stopped currentRecording of SQL for ID {}. Found {} message(s) on heap.", id, messages.size());
-        return messages;
-    }
-
-    /**
-     * Returns the recorded heap SQL logs of the specified currentRecording ID.
-     */
-    public Collection<String> getLogsById(String id) {
-        return Optional.ofNullable(recordingsById.get(id)).map(SqlRecording::getAll).orElse(emptyList());
-    }
-
-    /**
-     * Returns all recorded heap SQL logs that match the specified regular expression, regardless of currentRecording ID.
+     * Returns all recorded heap SQL logs that match the specified regular expression, regardless of recording ID.
      */
     public Collection<String> getLogsContainingRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
-        return getLogs(v -> v.getAll().stream().anyMatch(s -> pattern.matcher(s).find()));
+        return recordingsById.values().stream()
+                .filter(v -> v.getMessages().stream().anyMatch(s -> pattern.matcher(s).find()))
+                .flatMap(l -> l.getMessages().stream()).collect(toList());
     }
 
     /**
-     * Returns all recorded heap SQL logs that contain an exact case-sensitive match of the specified string, regardless of currentRecording ID.
+     * Returns all recorded heap SQL logs that contain an exact case-sensitive match of the specified string, regardless of recording ID.
      */
     public Collection<String> getLogsContaining(String expectedString) {
-        return getLogs(v -> v.getAll().stream().anyMatch(s -> s.contains(expectedString)));
-    }
-
-    private Collection<String> getLogs(Predicate<SqlRecording> predicate) {
         return recordingsById.values().stream()
-                .filter(predicate)
-                .flatMap(l -> l.getAll().stream()).collect(toList());
+                .filter(v -> v.getMessages().stream().anyMatch(s -> s.contains(expectedString)))
+                .flatMap(l -> l.getMessages().stream()).collect(toList());
     }
 
     /**
-     * Returns all heap SQL logs, across all currentRecording IDs.
+     * Returns all heap SQL logs, across all recording IDs.
      */
-    public Collection<String> getLogs() {
-        return recordingsById.values().stream().flatMap(l -> l.getAll().stream()).collect(toList());
+    public Collection<String> getAllLogs() {
+        return recordingsById.values().stream().flatMap(l -> l.getMessages().stream()).collect(toList());
+    }
+
+    public SqlRecording getRecording(String id) {
+        return recordingsById.get(id);
     }
 
     /**
-     * Clears all heap SQL logs across all currentRecording sessions.
+     * Stops all ongoing recordings and clears their recorded messages.
      */
     public void clearAll() {
+        recordingsById.values().forEach(SqlRecording::close);
         recordingsById.clear();
     }
 

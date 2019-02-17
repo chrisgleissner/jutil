@@ -16,18 +16,19 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @ToString
-@Getter
 @Slf4j
 @RequiredArgsConstructor
 public class SqlRecording implements Closeable {
+    private final SqlLog sqlLog;
     @ToString.Include
-    private final String id;
+    @Getter private final String id;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final List<String> messages = new LinkedList<>();
     private boolean firstWrite = true;
     private OutputStreamWriter osw;
 
-    SqlRecording(String id, OutputStream os, Charset charset) {
+    SqlRecording(SqlLog sqlLog, String id, OutputStream os, Charset charset) {
+        this.sqlLog = sqlLog;
         this.id = id;
         if (os != null)
             this.osw = new OutputStreamWriter(os, charset);
@@ -46,7 +47,7 @@ public class SqlRecording implements Closeable {
         }
     }
 
-    public Collection<String> getAll() {
+    public Collection<String> getMessages() {
         lock.readLock().lock();
         try {
             return new ArrayList<>(messages);
@@ -78,8 +79,13 @@ public class SqlRecording implements Closeable {
         }
     }
 
+    /**
+     * Closes (and thus stops) this recording. If writing to an OutputStream, this flushes any pending messages, but
+     * closing the OutputStream remains responsibility of the caller.
+     */
     @Override
     public void close() {
+        sqlLog.stopRecording(id);
         if (osw != null) {
             if (!firstWrite) {
                 writeToStream("]");
@@ -94,5 +100,14 @@ public class SqlRecording implements Closeable {
             }
         }
         log.info("Stopped recording of SQL for ID {}", id);
+    }
+
+    public int size() {
+        lock.writeLock().lock();
+        try {
+            return messages.size();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }

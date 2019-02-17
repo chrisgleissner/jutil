@@ -46,6 +46,16 @@ public class SqlLogTest {
     @Autowired
     private SqlLog sqlLog;
 
+    private static File createTempFile(String name) {
+        try {
+            File file = File.createTempFile(name, ".json");
+            file.deleteOnExit();
+            return file;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Before
     public void setUp() {
         sqlLog.clearAll();
@@ -72,20 +82,21 @@ public class SqlLogTest {
     @Test
     public void getLogsForThreadId() {
         String id = UUID.randomUUID().toString();
-        sqlLog.startRecording(id);
-        repo.findAll();
         String msg = "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}";
-        assertThat(sqlLog.getLogsById(id)).containsExactly(msg);
+        try (SqlRecording recording = sqlLog.startRecording(id)) {
+            repo.findAll();
+            assertThat(recording.getMessages()).containsExactly(msg);
+            repo.findByLastName("Bauer");
+            String[] msgs = {"{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}",
+                    "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_ where person0_.last_name=?\"], \"params\":[[\"Bauer\"]]}"};
+            assertThat(recording.getMessages()).containsExactly(msgs);
+        }
+        try (SqlRecording recording = sqlLog.startRecording(id)) {
+            assertThat(recording.getMessages()).isEmpty();
+            repo.findAll();
+            assertThat(recording.getMessages()).containsExactly(msg);
+        }
 
-        repo.findByLastName("Bauer");
-        String[] msgs = {"{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}",
-                "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_ where person0_.last_name=?\"], \"params\":[[\"Bauer\"]]}"};
-        assertThat(sqlLog.getLogsById(id)).containsExactly(msgs);
-        assertThat(sqlLog.startRecording(id)).containsExactlyInAnyOrder(msgs);
-        assertThat(sqlLog.getLogsById(id)).isEmpty();
-
-        repo.findAll();
-        assertThat(sqlLog.getLogsById(id)).containsExactly(msg);
     }
 
     @Test
@@ -107,29 +118,18 @@ public class SqlLogTest {
 
     @Test
     public void streamRecording() throws IOException {
-        assertThat(sqlLog.getLogs()).isEmpty();
+        assertThat(sqlLog.getAllLogs()).isEmpty();
         File file = File.createTempFile("test", ".json");
         file.deleteOnExit();
-        try (OutputStream os = new FileOutputStream(file)) {
-            sqlLog.startRecording("test", os, Charset.forName("UTF-8"));
+        try (OutputStream os = new FileOutputStream(file);
+             SqlRecording recording = sqlLog.startRecording("test", os, Charset.forName("UTF-8"))) {
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
-            assertThat(sqlLog.getLogs()).isEmpty();
-            sqlLog.stopRecording("test");
+            assertThat(sqlLog.getAllLogs()).isEmpty();
         } finally {
             jdbcTemplate.execute("drop table foo");
         }
         assertThat(file).hasSameContentAs(new File("src/test/resources/streamRecording.json"));
-    }
-
-    private static File createTempFile(String name) {
-        try {
-            File file = File.createTempFile(name, ".json");
-            file.deleteOnExit();
-            return file;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Test
@@ -138,29 +138,28 @@ public class SqlLogTest {
             Map<String, File> filesById = IntStream.range(0, 2).mapToObj((i) -> UUID.randomUUID().toString())
                     .collect(Collectors.toMap(Function.identity(), SqlLogTest::createTempFile));
 
-            assertThat(sqlLog.getLogs()).hasSize(0);
+            assertThat(sqlLog.getAllLogs()).hasSize(0);
             jdbcTemplate.execute("create table foo (id varchar)");
-            assertThat(sqlLog.getLogs()).hasSize(1);
+            assertThat(sqlLog.getAllLogs()).hasSize(1);
             sqlLog.clearAll();
 
             CountDownLatch endLatch = new CountDownLatch(filesById.size());
             filesById.entrySet().forEach(entry ->
                     new Thread(() -> {
-                        try (OutputStream os = new FileOutputStream(entry.getValue())) {
-                            sqlLog.startRecording(entry.getKey(), os, Charset.forName("UTF-8"));
+                        try (OutputStream os = new FileOutputStream(entry.getValue());
+                             SqlRecording recording = sqlLog.startRecording(entry.getKey(), os, Charset.forName("UTF-8"))) {
                             jdbcTemplate.execute(format("insert into foo (id) values ('%s')", entry.getKey()));
-                            sqlLog.stopRecording(entry.getKey());
-                            endLatch.countDown();
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
+                        endLatch.countDown();
                     }, entry.getKey()).start());
             endLatch.await(2, SECONDS);
-            assertThat(sqlLog.getLogs()).isEmpty();
+            assertThat(sqlLog.getAllLogs()).isEmpty();
 
             filesById.entrySet().forEach(entry -> {
                 assertThat(entry.getValue()).hasContent(String.format("[{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, " +
-                                "\"batchSize\":0, \"query\":[\"insert into foo (id) values ('%s')\"], \"params\":[]}]", entry.getKey()));
+                        "\"batchSize\":0, \"query\":[\"insert into foo (id) values ('%s')\"], \"params\":[]}]", entry.getKey()));
             });
         } finally {
             jdbcTemplate.execute("drop table foo");
@@ -194,9 +193,9 @@ public class SqlLogTest {
             ids.add(UUID.randomUUID().toString());
             ids.add(UUID.randomUUID().toString());
 
-            assertThat(sqlLog.getLogs()).hasSize(0);
+            assertThat(sqlLog.getAllLogs()).hasSize(0);
             jdbcTemplate.execute("create table foo (id varchar)");
-            assertThat(sqlLog.getLogs()).hasSize(1);
+            assertThat(sqlLog.getAllLogs()).hasSize(1);
 
             CountDownLatch endLatch = new CountDownLatch(ids.size());
             ids.forEach(id ->
@@ -207,10 +206,10 @@ public class SqlLogTest {
                     }, id).start());
             endLatch.await(2, SECONDS);
 
-            ids.forEach(id -> assertThat(sqlLog.getLogsById(id)).containsExactly(format(
+            ids.forEach(id -> assertThat(sqlLog.getRecording(id).getMessages()).containsExactly(format(
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, " +
                             "\"batchSize\":0, \"query\":[\"insert into foo (id) values ('%s')\"], \"params\":[]}", id)));
-            assertThat(sqlLog.getLogs()).hasSize(ids.size());
+            assertThat(sqlLog.getAllLogs()).hasSize(ids.size() + 1);
         } finally {
             jdbcTemplate.execute("drop table foo");
         }
