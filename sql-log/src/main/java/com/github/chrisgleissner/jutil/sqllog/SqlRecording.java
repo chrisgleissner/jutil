@@ -8,14 +8,21 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Closeable;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @ToString
 @Getter
 @Slf4j
 @RequiredArgsConstructor
-class SqlRecording implements Closeable {
+public class SqlRecording implements Closeable {
     @ToString.Include
     private final String id;
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final List<String> messages = new LinkedList<>();
     private boolean firstWrite = true;
     private PrintStream ps;
 
@@ -23,6 +30,28 @@ class SqlRecording implements Closeable {
         this.id = id;
         if (os != null)
             this.ps = new PrintStream(os);
+    }
+
+    void add(String msg) {
+        if (isRecordToStreamEnabled())
+            write(msg);
+        else {
+            lock.writeLock().lock();
+            try {
+                messages.add(msg);
+            } finally {
+                lock.writeLock().unlock();
+            }
+        }
+    }
+
+    Collection<String> getAll() {
+        lock.readLock().lock();
+        try {
+            return new ArrayList<>(messages);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     boolean isRecordToStreamEnabled() {

@@ -5,6 +5,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
 import net.ttddyy.dsproxy.QueryInfo;
+import net.ttddyy.dsproxy.listener.NoOpQueryExecutionListener;
 import net.ttddyy.dsproxy.listener.logging.DefaultJsonQueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.QueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
@@ -18,6 +19,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -28,21 +30,19 @@ import static java.util.stream.Collectors.toList;
  * Records SQL executions either on heap or by writing them to an OutputStream.
  *
  * <p>To start recording SQL executions, use {@link #startRecording(String)} (on heap)
- * or {@link #startStreamRecording(String, OutputStream)} (to stream). Stop recording (and close the stream if recording to stream)
+ * or {@link #startRecording(String, OutputStream)} (to stream). Stop recording (and close the stream if recording to stream)
  * via {@link #stopRecording(String)}.</p>
  */
 @Getter
 @ToString
 @Slf4j
-public class SqlLog implements BeanPostProcessor {
-    private final SqlExecutionListener sqlExecutionListener = new SqlExecutionListener(this);
-    
-    // TODO Move to listener
-    final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
+public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
+    private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
         protected void writeTimeEntry(StringBuilder sb, ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
         }
     };
-    final static InheritableThreadLocal<SqlRecording> recording = new InheritableThreadLocal<>();
+    private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
+    private final static InheritableThreadLocal<SqlRecording> recording = new InheritableThreadLocal<>();
     private final boolean traceMethods;
     private boolean logQueries;
 
@@ -70,18 +70,19 @@ public class SqlLog implements BeanPostProcessor {
      * @param id under which the recordings will be tracked
      * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
      */
-    public Collection<String>  startStreamRecording(String id, OutputStream os) {
+    public Collection<String> startRecording(String id, OutputStream os) {
         return setRecording(new SqlRecording(id, os));
     }
 
-
-    private Collection<String> setRecording(SqlRecording newRecording) {
+    private Collection<String> setRecording(SqlRecording rec) {
         Collection<String> messages = getMessagesForCurrentRecording();
-        recording.set(newRecording);
-        if (newRecording == null) {
+        recording.set(rec);
+        if (rec == null) {
             log.info("Stopped SQL recording");
-        } else
-            log.info("Started {} recording of SQL for ID {}", newRecording.isRecordToStreamEnabled() ? "stream" : "heap", newRecording.getId());
+        } else {
+            recordingsById.put(rec.getId(), rec);
+            log.info("Started {} recording of SQL for ID {}", rec.isRecordToStreamEnabled() ? "stream" : "heap", rec.getId());
+        }
         return messages;
     }
 
@@ -89,7 +90,7 @@ public class SqlLog implements BeanPostProcessor {
         SqlRecording oldRecording = recording.get();
         Collection<String> messages = emptyList();
         if (oldRecording != null) {
-            messages = Optional.ofNullable(sqlExecutionListener.getLogsById().remove(oldRecording.getId())).map(r -> r.getAll()).orElse(emptyList());
+            messages = Optional.ofNullable(recordingsById.remove(oldRecording.getId())).map(r -> r.getAll()).orElse(emptyList());
             oldRecording.close();
         }
         return messages;
@@ -111,7 +112,7 @@ public class SqlLog implements BeanPostProcessor {
      * Returns the recorded heap SQL logs of the specified recording ID.
      */
     public Collection<String> getLogsById(String id) {
-        return Optional.ofNullable(sqlExecutionListener.getLogsById().get(id)).map(SqlExecutions::getAll).orElse(emptyList());
+        return Optional.ofNullable(recordingsById.get(id)).map(SqlRecording::getAll).orElse(emptyList());
     }
 
     /**
@@ -129,8 +130,8 @@ public class SqlLog implements BeanPostProcessor {
         return getLogs(v -> v.getAll().stream().anyMatch(s -> s.contains(expectedString)));
     }
 
-    private Collection<String> getLogs(Predicate<SqlExecutions> predicate) {
-        return sqlExecutionListener.getLogsById().values().stream()
+    private Collection<String> getLogs(Predicate<SqlRecording> predicate) {
+        return recordingsById.values().stream()
                 .filter(predicate)
                 .flatMap(l -> l.getAll().stream()).collect(toList());
     }
@@ -139,21 +140,14 @@ public class SqlLog implements BeanPostProcessor {
      * Returns all heap SQL logs, across all recording IDs.
      */
     public Collection<String> getLogs() {
-        return sqlExecutionListener.getLogsById().values().stream().flatMap(l -> l.getAll().stream()).collect(toList());
+        return recordingsById.values().stream().flatMap(l -> l.getAll().stream()).collect(toList());
     }
 
     /**
      * Clears all heap SQL logs across all recording sessions.
      */
     public void clearAll() {
-        sqlExecutionListener.getLogsById().clear();
-    }
-
-    /**
-     * Clears the heap SQL logs for the specified recording session.
-     */
-    public void clearLogsForThreadId(String id) {
-        sqlExecutionListener.getLogsById().remove(id);
+        recordingsById.clear();
     }
 
     @Override
@@ -170,12 +164,19 @@ public class SqlLog implements BeanPostProcessor {
                     builder.traceMethods();
             if (this.logQueries)
                 builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
-            return builder.listener(sqlExecutionListener).build();
+            return builder.listener(this).build();
         }
         return bean;
     }
 
-    SqlRecording getRecording() {
-        return recording.get();
+    @Override
+    public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
+        String msg = logEntryCreator.getLogEntry(executionInfo, list, false, false);
+        SqlRecording rec = recording.get();
+        if (rec != null) {
+            rec.add(msg);
+            log.debug("{}: {}", rec.getId(), msg);
+        } else
+            log.debug("{}", msg);
     }
 }

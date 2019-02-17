@@ -110,7 +110,7 @@ public class SqlLogTest {
         File file = File.createTempFile("test", ".json");
         file.deleteOnExit();
         try (OutputStream os = new FileOutputStream(file)) {
-            sqlLog.startStreamRecording("test", os);
+            sqlLog.startRecording("test", os);
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
             assertThat(sqlLog.getLogs()).isEmpty();
@@ -146,7 +146,7 @@ public class SqlLogTest {
             filesById.entrySet().forEach(entry ->
                     new Thread(() -> {
                         try (OutputStream os = new FileOutputStream(entry.getValue())) {
-                            sqlLog.startStreamRecording(entry.getKey(), os);
+                            sqlLog.startRecording(entry.getKey(), os);
                             jdbcTemplate.execute(format("insert into foo (id) values ('%s')", entry.getKey()));
                             sqlLog.stopRecording(entry.getKey());
                             endLatch.countDown();
