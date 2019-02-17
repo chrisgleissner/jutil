@@ -6,12 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -32,14 +29,14 @@ public class SqlLogExampleApplicationDisabledTest {
 
     @Before
     public void setUp() {
-        sqlLog.clearAll();
+        sqlLog.clear();
     }
 
     @Test
     public void wontRecordIfDisabledByProperty() {
         try (SqlRecording recording = sqlLog.startRecording("example")) {
             jdbcTemplate.execute("create table foo (id int)");
-            assertThat(sqlLog.getAllLogs()).isEmpty();
+            assertThat(sqlLog.getAllMessages()).isEmpty();
         } finally {
             jdbcTemplate.execute("drop table foo");
         }

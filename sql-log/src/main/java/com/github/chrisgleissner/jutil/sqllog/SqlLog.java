@@ -106,7 +106,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     /**
      * Returns all recorded heap SQL logs that match the specified regular expression, regardless of recording ID.
      */
-    public Collection<String> getLogsContainingRegex(String regex) {
+    public Collection<String> getMessagesContainingRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
         return recordingsById.values().stream()
                 .filter(v -> v.getMessages().stream().anyMatch(s -> pattern.matcher(s).find()))
@@ -116,7 +116,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     /**
      * Returns all recorded heap SQL logs that contain an exact case-sensitive match of the specified string, regardless of recording ID.
      */
-    public Collection<String> getLogsContaining(String expectedString) {
+    public Collection<String> getMessagesContaining(String expectedString) {
         return recordingsById.values().stream()
                 .filter(v -> v.getMessages().stream().anyMatch(s -> s.contains(expectedString)))
                 .flatMap(l -> l.getMessages().stream()).collect(toList());
@@ -125,14 +125,14 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     /**
      * Returns all heap SQL logs, across all recording IDs.
      */
-    public Collection<String> getAllLogs() {
+    public Collection<String> getAllMessages() {
         return recordingsById.values().stream().flatMap(l -> l.getMessages().stream()).collect(toList());
     }
 
     /**
      * Stops all ongoing recordings and clears their recorded messages.
      */
-    public void clearAll() {
+    public void clear() {
         recordingsById.values().forEach(SqlRecording::close);
         recordingsById.clear();
     }

@@ -26,7 +26,7 @@ public class SqlLogExampleApplicationTest {
 
     @Before
     public void setUp() {
-        sqlLog.clearAll();
+        sqlLog.clear();
     }
 
     @Test
@@ -38,8 +38,8 @@ public class SqlLogExampleApplicationTest {
             String[] msgs = {"{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into foo (id) values (1)\"], \"params\":[]}",
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select count (*) from foo where id = 1\"], \"params\":[]}"};
-            assertThat(sqlLog.getLogsContaining("table foo")).containsExactlyInAnyOrder(msgs);
-            assertThat(sqlLog.getLogsContaining("foo")).containsExactlyInAnyOrder(msgs);
+            assertThat(sqlLog.getMessagesContaining("table foo")).containsExactlyInAnyOrder(msgs);
+            assertThat(sqlLog.getMessagesContaining("foo")).containsExactlyInAnyOrder(msgs);
         } finally {
             jdbcTemplate.execute("drop table foo");
         }

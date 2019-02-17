@@ -65,7 +65,6 @@ records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x 
 
 To start recording:
 1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
-1. Add `com.github.chrisgleissner.jutil.sqllog=true` to your `application.properties`
 1. Wire in the `SqlLog` bean and call its `startRecording` or `startStreamRecording` method. 
 
 This will record the SQL executions sent via any DataSource bean in your context either on heap or in the specified
@@ -82,7 +81,7 @@ public class DbConfig {
 
     DbConfig(SqlLog sqlLog) throws FileNotFoundException {
         this.sqlLog = sqlLog;
-        sqlLog.startStreamRecording("sql", new FileOutputStream(new File("sql.json")));
+        sqlLog.startRecording("sql", new FileOutputStream(new File("sql.json")));
     }
 
     @PreDestroy
