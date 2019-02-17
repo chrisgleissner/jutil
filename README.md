@@ -60,7 +60,7 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 
 ## Sql Log
 
-The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
+The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
 records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x auto-configuration. 
 
 To start recording:
