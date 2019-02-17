@@ -15,8 +15,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-@ToString
+/**
+ * Recording of SQL messages.
+ */
 @Slf4j
+@ToString
 @RequiredArgsConstructor
 public class SqlRecording implements Closeable {
     private final SqlLog sqlLog;
@@ -97,6 +100,7 @@ public class SqlRecording implements Closeable {
             }
             try {
                 osw.flush();
+                osw.close();
                 osw = null;
                 log.debug("Closed OutputStream for ID {}", id);
             } catch (Exception e) {

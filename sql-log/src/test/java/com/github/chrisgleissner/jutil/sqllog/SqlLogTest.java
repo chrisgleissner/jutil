@@ -2,6 +2,7 @@ package com.github.chrisgleissner.jutil.sqllog;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ import java.util.stream.IntStream;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -60,37 +62,57 @@ public class SqlLogTest {
     @Before
     public void setUp() {
         sqlLog.clear();
-        sqlLog.startRecording("default");
+    }
+
+    @Test
+    public void canStartRecordingIfAlreadyRecording() {
+        sqlLog.startRecording("foo");
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> sqlLog.startRecording("bar"))
+                .withMessageContaining("Can't start recording with ID bar since you first need to stop the current recording");
+        sqlLog.stopRecording("foo");
+        sqlLog.startRecording("baz");
+    }
+
+    @Test
+    public void canStopRecordingThatDoesntExist() {
+        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> sqlLog.stopRecording("bar"))
+                .withMessageContaining("Can't stop recording with ID bar since it doesn't exist");
     }
 
     @Test
     public void getMessagesContaining() {
-        repo.save(new Person("Hans", "Müllerʤ"));
-        Collection<String> matchingLogs = sqlLog.getMessagesContaining("insert into person");
-        assertThat(matchingLogs).containsExactly(
-                "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"call next value for hibernate_sequence\"], \"params\":[[]]}",
-                "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into person (first_name, last_name, id) values (?, ?, ?)\"], \"params\":[[\"Hans\",\"Müllerʤ\",\"1\"]]}");
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            repo.save(new Person("Hans", "Müllerʤ"));
+            Collection<String> matchingLogs = sqlLog.getMessagesContaining("insert into person");
+            assertThat(matchingLogs).containsExactly(
+                    "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"call next value for hibernate_sequence\"], \"params\":[[]]}",
+                    "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into person (first_name, last_name, id) values (?, ?, ?)\"], \"params\":[[\"Hans\",\"Müllerʤ\",\"1\"]]}");
+        }
     }
 
     @Test
     public void setSqlLogEnabled() {
-        try {
-            sqlLog.setSqlLogEnabled(false);
-            repo.findAll();
-            assertThat(sqlLog.getAllMessages()).isEmpty();
-        } finally {
-            sqlLog.setSqlLogEnabled(true);
-            repo.findAll();
-            assertThat(sqlLog.getAllMessages()).containsExactly(REPO_FIND_ALL);
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            try {
+                sqlLog.setSqlLogEnabled(false);
+                repo.findAll();
+                assertThat(sqlLog.getAllMessages()).isEmpty();
+            } finally {
+                sqlLog.setSqlLogEnabled(true);
+                repo.findAll();
+                assertThat(sqlLog.getAllMessages()).containsExactly(REPO_FIND_ALL);
+            }
         }
     }
 
 
     @Test
     public void getMessagesContainingRegex() {
-        repo.findAll();
-        Collection<String> matchingLogs = sqlLog.getMessagesContainingRegex("select.*?from person");
-        assertThat(matchingLogs).containsExactly(REPO_FIND_ALL);
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            repo.findAll();
+            Collection<String> matchingLogs = sqlLog.getMessagesContainingRegex("select.*?from person");
+            assertThat(matchingLogs).containsExactly(REPO_FIND_ALL);
+        }
     }
 
     @Test
@@ -121,7 +143,7 @@ public class SqlLogTest {
 
     @Test
     public void getMessagesContainingForJdbc() {
-        try {
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
             assertThat(jdbcTemplate.queryForObject("select count (*) from foo where id = 1", Integer.class)).isEqualTo(1);
@@ -158,9 +180,11 @@ public class SqlLogTest {
             Map<String, File> filesById = IntStream.range(0, 2).mapToObj((i) -> UUID.randomUUID().toString())
                     .collect(Collectors.toMap(Function.identity(), SqlLogTest::createTempFile));
 
-            assertThat(sqlLog.getAllMessages()).hasSize(0);
-            jdbcTemplate.execute("create table foo (id varchar)");
-            assertThat(sqlLog.getAllMessages()).hasSize(1);
+            try (SqlRecording recording = sqlLog.startRecording("test")) {
+                assertThat(sqlLog.getAllMessages()).hasSize(0);
+                jdbcTemplate.execute("create table foo (id varchar)");
+                assertThat(sqlLog.getAllMessages()).hasSize(1);
+            }
             sqlLog.clear();
 
             CountDownLatch endLatch = new CountDownLatch(filesById.size());
@@ -189,7 +213,7 @@ public class SqlLogTest {
     @Transactional
     @Test
     public void getMessagesContainingForTransactionalJdbc() {
-        try {
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
             assertThat(jdbcTemplate.queryForObject("select count (*) from foo where id = 1", Integer.class)).isEqualTo(1);
@@ -215,8 +239,10 @@ public class SqlLogTest {
             ids.add(UUID.randomUUID().toString());
 
             assertThat(sqlLog.getAllMessages()).hasSize(0);
-            jdbcTemplate.execute("create table foo (id varchar)");
-            assertThat(sqlLog.getAllMessages()).hasSize(1);
+            try (SqlRecording recording = sqlLog.startRecording("test")) {
+                jdbcTemplate.execute("create table foo (id varchar)");
+                assertThat(sqlLog.getAllMessages()).hasSize(1);
+            }
 
             CountDownLatch endLatch = new CountDownLatch(ids.size());
             ids.forEach(id ->
@@ -230,7 +256,7 @@ public class SqlLogTest {
             ids.forEach(id -> assertThat(sqlLog.getRecording(id).getMessages()).containsExactly(format(
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, " +
                             "\"batchSize\":0, \"query\":[\"insert into foo (id) values ('%s')\"], \"params\":[]}", id)));
-            assertThat(sqlLog.getAllMessages()).hasSize(ids.size() + 1);
+            assertThat(sqlLog.getAllMessages()).hasSize(ids.size());
         } finally {
             jdbcTemplate.execute("drop table foo");
         }

@@ -1,7 +1,6 @@
 package com.github.chrisgleissner.jutil.sqllog;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
@@ -27,10 +26,9 @@ import java.util.regex.Pattern;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Records SQL executions either on heap or by writing them to an OutputStream.
- * To start recording SQL executions, use {@link #startRecording(String)} (on heap)
- * or {@link #startRecording(String, OutputStream, Charset)} (to stream). This will return a {@link SqlRecording}.
- * To stop recording, call {@link SqlRecording#close()}.</p>
+ * Records SQL messages either on heap or by writing them to an OutputStream.
+ * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, OutputStream, Charset)} (to stream) to start
+ * recording which returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.</p>
  */
 @ToString
 @Slf4j
@@ -53,13 +51,17 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     private final boolean traceMethods;
 
     @Getter
-    @Setter
     private boolean sqlLogEnabled;
 
     SqlLog(boolean sqlLogEnabled, boolean logQueries, boolean traceMethods) {
         this.sqlLogEnabled = sqlLogEnabled;
         this.logQueries = logQueries;
         this.traceMethods = traceMethods;
+    }
+
+    public void setSqlLogEnabled(boolean sqlLogEnabled) {
+        this.sqlLogEnabled = sqlLogEnabled;
+        log.info("SQL log enabled: {}", sqlLogEnabled);
     }
 
     /**
@@ -75,12 +77,15 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     /**
      * Starts a stream recording session for the specified ID. If a session with this ID is currently in progress,
-     * * it is stopped first.
+     * it is stopped first.
      *
      * @param id under which the recordings will be tracked
      * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
      */
     public SqlRecording startRecording(String id, OutputStream os, Charset charset) {
+        if (currentRecording.get() != null)
+            throw new RuntimeException(String.format("Can't start recording with ID %s since you first need to " +
+                    "stop the current recording: %s", id, currentRecording.get()));
         SqlRecording recording = new SqlRecording(this, id, os, charset);
         currentRecording.set(recording);
         recordingsById.put(recording.getId(), recording);
@@ -89,16 +94,24 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     }
 
     /**
-     * Stops the recording with the specified ID and returns it, if existent. Alternatively, just call {@link SqlRecording#close()}.
+     * Stops the recording with the specified ID and returns it, if existent. Alternatively, call {@link SqlRecording#close()}.
      */
     public SqlRecording stopRecording(String id) {
         SqlRecording recording = recordingsById.remove(id);
+        if (recording == null)
+            throw new RuntimeException(String.format("Can't stop recording with ID %s since it doesn't exist", id));
         recording.stopRecording();
         currentRecording.set(null);
         log.info("Stopped recording of SQL for ID {}. Found {} message(s) on heap.", id, recording.size());
         return recording;
     }
 
+    /**
+     * Returns the recording with the specified ID, unless it has been stopped.
+     *
+     * @param id of recording
+     * @return recording or null if the recording is not known or not in progress
+     */
     public SqlRecording getRecording(String id) {
         return recordingsById.get(id);
     }
