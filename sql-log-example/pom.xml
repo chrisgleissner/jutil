@@ -11,7 +11,7 @@
 
 	<groupId>com.github.chrisgleissner.jutil</groupId>
 	<artifactId>jutil-sql-log-example</artifactId>
-	<version>1.1.3</version>
+	<version>1.1.4-SNAPSHOT</version>
 	<name>jutil-sql-log-example</name>
 
 	<dependencies>
@@ -62,8 +62,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <tag>v1.1.3</tag>
-  </scm>
 </project>
