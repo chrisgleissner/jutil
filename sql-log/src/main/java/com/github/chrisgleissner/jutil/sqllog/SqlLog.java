@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * Records SQL messages either on heap or by writing them to an OutputStream.
  * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, OutputStream, Charset)} (to stream) to start
- * recording which returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.</p>
+ * recording which returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.
  */
 @Slf4j
 @ToString
