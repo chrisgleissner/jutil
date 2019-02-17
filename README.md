@@ -61,9 +61,9 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 ## Sql Log
 
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
-records SQL executions in memory or to an OutputStream.
+records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x auto-configuration. 
 
-This module assumes you are using Spring Boot 2.1.x and supports Spring Boot auto-configuration. To start recording:
+To start recording:
 1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
 1. Add `com.github.chrisgleissner.jutil.sqllog=true` to your `application.properties`
 1. Wire in the `SqlLog` bean and call its `startRecording` or `startStreamRecording` method. 
