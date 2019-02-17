@@ -23,26 +23,26 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.4</version>
+    <version>VERSION</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-sql-log</artifactId>
-    <version>1.1.4</version>
+    <version>VERSION</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.4</version>
+    <version>VERSION</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.4'
-compile 'com.github.chrisgleissner:jutil-sql-log:1.1.4'
-compile 'com.github.chrisgleissner:jutil-table:1.1.4'
+compile 'com.github.chrisgleissner:jutil-protobuf:VERSION'
+compile 'com.github.chrisgleissner:jutil-sql-log:VERSION'
+compile 'com.github.chrisgleissner:jutil-table:VERSION'
 ```
 
 ## Protobuf Utilities
@@ -65,28 +65,22 @@ records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x 
 
 To start recording:
 1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
-1. Wire in the `SqlLog` bean and call its `startRecording` or `startStreamRecording` method. 
+1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording` to track any messages 
 
-This will record the SQL executions sent via any DataSource bean in your context either on heap or in the specified
-OutputStream. The SQL is JSON encoded.
+This will record all SQL messages sent via any DataSource bean in your context. The recording is kept either on heap or 
+written to the specified OutputStream. All SQL is JSON encoded. 
 
-To end recording, call `stopRecording`. For stream recording, it will close the
-stream. For heap recording, it will return a String collection of the recorded SQL executions.
+Call `stopRecording` or close the `SqlRecording` instance to stop the recording.
 
 Example:
 ```java
 @Configuration
-public class DbConfig {
-    private final SqlLog sqlLog;
-
-    DbConfig(SqlLog sqlLog) throws FileNotFoundException {
-        this.sqlLog = sqlLog;
-        sqlLog.startRecording("sql", new FileOutputStream(new File("sql.json")));
-    }
-
-    @PreDestroy
-    public void stop() {
-        sqlLog.stopRecording("sql");
+public class SampleConfig {
+    SampleConfig(SqlLog sqlLog) throws FileNotFoundException {
+        try (SqlRecording recording = sqlLog.startRecording("sql", new FileOutputStream(new File("sql.json")), Charset.forName("UTF-8"))) {
+            // Interact with the DB
+        }
+        // Find all interactions in the sql.json file
     }
 }
 ```
