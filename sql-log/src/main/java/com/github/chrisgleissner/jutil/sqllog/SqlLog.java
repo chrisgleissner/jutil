@@ -36,6 +36,8 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 public class SqlLog implements BeanPostProcessor {
     private final SqlExecutionListener sqlExecutionListener = new SqlExecutionListener(this);
+    
+    // TODO Move to listener
     final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
         protected void writeTimeEntry(StringBuilder sb, ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
         }
