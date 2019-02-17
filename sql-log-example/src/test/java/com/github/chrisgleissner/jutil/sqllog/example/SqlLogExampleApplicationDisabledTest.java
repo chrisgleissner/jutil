@@ -1,6 +1,7 @@
 package com.github.chrisgleissner.jutil.sqllog.example;
 
 import com.github.chrisgleissner.jutil.sqllog.SqlLog;
+import com.github.chrisgleissner.jutil.sqllog.SqlRecording;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,13 +21,27 @@ import static org.junit.Assert.assertNull;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@TestPropertySource(properties = "com.github.chrisgleissner.jutil.sqllog=false")
 public class SqlLogExampleApplicationDisabledTest {
 
     @Autowired
-    private ApplicationContext ctx;
+    private JdbcTemplate jdbcTemplate;
 
-    @Test(expected = NoSuchBeanDefinitionException.class)
-    public void sqlLogBeanDoesNotExist() {
-        ctx.getBean(SqlLog.class);
+    @Autowired
+    private SqlLog sqlLog;
+
+    @Before
+    public void setUp() {
+        sqlLog.clearAll();
+    }
+
+    @Test
+    public void wontRecordIfDisabledByProperty() {
+        try (SqlRecording recording = sqlLog.startRecording("example")) {
+            jdbcTemplate.execute("create table foo (id int)");
+            assertThat(sqlLog.getAllLogs()).isEmpty();
+        } finally {
+            jdbcTemplate.execute("drop table foo");
+        }
     }
 }

@@ -1,6 +1,6 @@
 package com.github.chrisgleissner.jutil.sqllog;
 
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
@@ -19,10 +19,12 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
+import static lombok.AccessLevel.PACKAGE;
 
 /**
  * Records SQL executions either on heap or by writing them to an OutputStream.
@@ -32,21 +34,17 @@ import static java.util.stream.Collectors.toList;
  */
 @ToString
 @Slf4j
+@RequiredArgsConstructor(access = PACKAGE)
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
-    private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
+    @ToString.Exclude private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
         protected void writeTimeEntry(StringBuilder sb, ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
         }
     };
-    private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
+    @ToString.Exclude private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
     private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
+    private final boolean sqlLogEnabled;
     private final boolean logQueries;
     private final boolean traceMethods;
-
-    SqlLog(boolean logQueries, boolean traceMethods) {
-        this.logQueries = logQueries;
-        this.traceMethods = traceMethods;
-        log.debug("Created SqlLog: logQueries={}, traceMethods={}", logQueries, traceMethods);
-    }
 
     /**
      * Starts a heap recording session for the specified ID. If a session with this ID is currently in progress,
@@ -74,11 +72,19 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
         return recording;
     }
 
-    SqlRecording stopRecording(String id) {
+    /**
+     * Stops the recording with the specified ID and returns it, if existent. Alternatively, just call {@link SqlRecording#close()}.
+     */
+    public SqlRecording stopRecording(String id) {
         SqlRecording recording = recordingsById.remove(id);
+        recording.stopRecording();
         currentRecording.set(null);
         log.info("Stopped recording of SQL for ID {}. Found {} message(s) on heap.", id, recording.size());
         return recording;
+    }
+
+    public SqlRecording getRecording(String id) {
+        return recordingsById.get(id);
     }
 
     /**
@@ -107,10 +113,6 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
         return recordingsById.values().stream().flatMap(l -> l.getMessages().stream()).collect(toList());
     }
 
-    public SqlRecording getRecording(String id) {
-        return recordingsById.get(id);
-    }
-
     /**
      * Stops all ongoing recordings and clears their recorded messages.
      */
@@ -126,7 +128,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     @Override
     public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
-        if (bean instanceof DataSource) {
+        if (sqlLogEnabled && bean instanceof DataSource) {
             ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean)
                     .connectionIdManager(new DefaultConnectionIdManager());
             if (this.traceMethods)
@@ -141,11 +143,10 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     @Override
     public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
         String msg = logEntryCreator.getLogEntry(executionInfo, list, false, false);
-        SqlRecording rec = currentRecording.get();
-        if (rec != null) {
-            rec.add(msg);
-            log.debug("{}: {}", rec.getId(), msg);
-        } else
-            log.debug("{}", msg);
+        Optional.ofNullable(currentRecording.get()).ifPresent(r -> {
+            r.add(msg);
+            log.debug("{}: {}", r.getId(), msg);
+
+        });
     }
 }

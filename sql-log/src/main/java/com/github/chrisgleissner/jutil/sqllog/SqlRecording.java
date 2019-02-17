@@ -86,6 +86,10 @@ public class SqlRecording implements Closeable {
     @Override
     public void close() {
         sqlLog.stopRecording(id);
+        log.info("Stopped recording of SQL for ID {}", id);
+    }
+
+    void stopRecording() {
         if (osw != null) {
             if (!firstWrite) {
                 writeToStream("]");
@@ -99,7 +103,6 @@ public class SqlRecording implements Closeable {
                 throw new RuntimeException("Could not close OutputStream for ID " + id, e);
             }
         }
-        log.info("Stopped recording of SQL for ID {}", id);
     }
 
     public int size() {
