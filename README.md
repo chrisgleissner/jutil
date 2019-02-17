@@ -23,26 +23,26 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.4</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-sql-log</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.4</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.4</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.2'
-compile 'com.github.chrisgleissner:jutil-sql-log:1.1.2'
-compile 'com.github.chrisgleissner:jutil-table:1.1.2'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.4'
+compile 'com.github.chrisgleissner:jutil-sql-log:1.1.4'
+compile 'com.github.chrisgleissner:jutil-table:1.1.4'
 ```
 
 ## Protobuf Utilities
@@ -74,6 +74,24 @@ To start recording, wire in the `SqlLog` bean and call its `startRecording(Strin
 
 To end recording, call `stopRecording(String id)`. If you used heap recording, this will also return a String collection
 of any SQL.
+
+Example:
+```java
+@Configuration
+public class DbConfig {
+    private final SqlLog sqlLog;
+
+    DbConfig(SqlLog sqlLog) throws FileNotFoundException {
+        this.sqlLog = sqlLog;
+        sqlLog.startStreamRecording("sql", new FileOutputStream(new File("sql.json")));
+    }
+
+    @PreDestroy
+    public void stop() {
+        sqlLog.stopRecording("sql");
+    }
+}
+```
 
 ## Table Printer
 
