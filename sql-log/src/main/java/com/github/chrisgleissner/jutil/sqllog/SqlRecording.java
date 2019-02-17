@@ -16,7 +16,7 @@ import java.io.PrintStream;
 class SqlRecording implements Closeable {
     @ToString.Include
     private final String id;
-    boolean firstWrite = true;
+    private boolean firstWrite = true;
     private PrintStream ps;
 
     public SqlRecording(String id, OutputStream os) {
