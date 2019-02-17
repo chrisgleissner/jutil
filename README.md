@@ -63,17 +63,16 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
 records SQL executions in memory or to an OutputStream.
 
-This module assumes you are using Spring Boot 2.1.x and supports Spring Boot auto-configuration. 
+This module assumes you are using Spring Boot 2.1.x and supports Spring Boot auto-configuration. To start recording:
+1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
+1. Add `com.github.chrisgleissner.jutil.sqllog=true` to your `application.properties`
+1. Wire in the `SqlLog` bean and call its `startRecording` or `startStreamRecording` method. 
 
-Simply declare a dependency on this module and ensure the property 
-`com.github.chrisgleissner.jutil.sqllog=true` is declared in your application.properties. This will prepare all 
-`DataSources` in your context for recording any SQL statements sent through them.
+This will record the SQL executions sent via any DataSource bean in your context either on heap or in the specified
+OutputStream. The SQL is JSON encoded.
 
-To start recording, wire in the `SqlLog` bean and call its `startRecording(String id)` (heap recording) or 
-`startRecording(String id, OutputStream os)` (stream recording) methods. Recordings are formatted as JSON messages.
-
-To end recording, call `stopRecording(String id)`. If you used heap recording, this will also return a String collection
-of any SQL.
+To end recording, call `stopRecording`. For stream recording, it will close the
+stream. For heap recording, it will return a String collection of the recorded SQL executions.
 
 Example:
 ```java
