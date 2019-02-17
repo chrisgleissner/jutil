@@ -41,7 +41,8 @@ class SqlRecording implements Closeable {
     @Override
     public void close() {
         if (ps != null) {
-            ps.println("]");
+            if (!firstWrite)
+                ps.println("]");
             try {
                 ps.flush();
                 ps.close();
