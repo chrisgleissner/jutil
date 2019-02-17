@@ -24,10 +24,10 @@ class SqlExecutionListener extends NoOpQueryExecutionListener {
     @Override
     public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
         String msg = sqlLog.getLogEntryCreator().getLogEntry(executionInfo, list, false, false);
-        SqlRecording ctx = sqlLog.getRecording();
-        if (ctx != null) {
-            logsById.computeIfAbsent(ctx.getId(), id -> new SqlExecutions(ctx)).add(msg);
-            log.debug("{}: {}", ctx.getId(), msg);
+        SqlRecording recording = sqlLog.getRecording();
+        if (recording != null) {
+            logsById.computeIfAbsent(recording.getId(), id -> new SqlExecutions(recording)).add(msg);
+            log.debug("{}: {}", recoding.getId(), msg);
         } else
             log.debug("{}", msg);
     }
