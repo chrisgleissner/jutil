@@ -23,26 +23,26 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>VERSION</version>
+    <version>1.1.5</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-sql-log</artifactId>
-    <version>VERSION</version>
+    <version>1.1.5</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>VERSION</version>
+    <version>1.1.5</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:VERSION'
-compile 'com.github.chrisgleissner:jutil-sql-log:VERSION'
-compile 'com.github.chrisgleissner:jutil-table:VERSION'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.5'
+compile 'com.github.chrisgleissner:jutil-sql-log:1.1.5'
+compile 'com.github.chrisgleissner:jutil-table:1.1.5'
 ```
 
 ## Protobuf Utilities
