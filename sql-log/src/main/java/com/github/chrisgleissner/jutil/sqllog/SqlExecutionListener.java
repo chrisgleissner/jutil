@@ -27,7 +27,7 @@ class SqlExecutionListener extends NoOpQueryExecutionListener {
         SqlRecording recording = sqlLog.getRecording();
         if (recording != null) {
             logsById.computeIfAbsent(recording.getId(), id -> new SqlExecutions(recording)).add(msg);
-            log.debug("{}: {}", recoding.getId(), msg);
+            log.debug("{}: {}", recording.getId(), msg);
         } else
             log.debug("{}", msg);
     }
