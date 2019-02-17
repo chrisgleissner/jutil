@@ -7,7 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -24,12 +25,12 @@ public class SqlRecording implements Closeable {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final List<String> messages = new LinkedList<>();
     private boolean firstWrite = true;
-    private PrintStream ps;
+    private OutputStreamWriter osw;
 
-    public SqlRecording(String id, OutputStream os) {
+    SqlRecording(String id, OutputStream os, Charset charset) {
         this.id = id;
         if (os != null)
-            this.ps = new PrintStream(os);
+            this.osw = new OutputStreamWriter(os, charset);
     }
 
     void add(String msg) {
@@ -45,7 +46,7 @@ public class SqlRecording implements Closeable {
         }
     }
 
-    Collection<String> getAll() {
+    public Collection<String> getAll() {
         lock.readLock().lock();
         try {
             return new ArrayList<>(messages);
@@ -55,26 +56,38 @@ public class SqlRecording implements Closeable {
     }
 
     boolean isRecordToStreamEnabled() {
-        return ps != null;
+        return osw != null;
     }
 
     void write(String msg) {
         if (firstWrite) {
-            ps.print("[");
+            writeToStream("[");
             firstWrite = false;
-        } else
-            ps.println(",");
-        ps.print(msg);
+        } else {
+            writeToStream(",");
+            writeToStream("\n");
+        }
+        writeToStream(msg);
+    }
+
+    private void writeToStream(String s) {
+        try {
+            osw.write(s);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write to stream: " + s, e);
+        }
     }
 
     @Override
     public void close() {
-        if (ps != null) {
-            if (!firstWrite)
-                ps.println("]");
+        if (osw != null) {
+            if (!firstWrite) {
+                writeToStream("]");
+                writeToStream("\n");
+            }
             try {
-                ps.flush();
-                ps = null;
+                osw.flush();
+                osw = null;
                 log.debug("Closed OutputStream for ID {}", id);
             } catch (Exception e) {
                 throw new RuntimeException("Could not close OutputStream for ID " + id, e);

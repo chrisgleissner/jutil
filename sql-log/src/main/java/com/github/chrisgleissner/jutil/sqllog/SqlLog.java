@@ -16,6 +16,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import javax.sql.DataSource;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,7 @@ import static java.util.stream.Collectors.toList;
  * Records SQL executions either on heap or by writing them to an OutputStream.
  *
  * <p>To start currentRecording SQL executions, use {@link #startRecording(String)} (on heap)
- * or {@link #startRecording(String, OutputStream)} (to stream). Stop currentRecording (and close the stream if currentRecording to stream)
+ * or {@link #startRecording(String, OutputStream, Charset)} (to stream). Stop currentRecording (and close the stream if currentRecording to stream)
  * via {@link #stopRecording(String)}.</p>
  */
 @Getter
@@ -43,8 +44,8 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     };
     private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
     private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
+    private final boolean logQueries;
     private final boolean traceMethods;
-    private boolean logQueries;
 
     SqlLog(boolean logQueries, boolean traceMethods) {
         this.logQueries = logQueries;
@@ -60,7 +61,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
      * @return recorded heap SQL logs for previous currentRecording of the specified ID, empty if no such currentRecording exists
      */
     public Collection<String> startRecording(String id) {
-        return setCurrentRecording(new SqlRecording(id, null));
+        return setCurrentRecording(new SqlRecording(id, null, null));
     }
 
     /**
@@ -70,8 +71,8 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
      * @param id under which the recordings will be tracked
      * @return recorded heap SQL logs for previous currentRecording of the specified ID, empty if no such currentRecording exists
      */
-    public Collection<String> startRecording(String id, OutputStream os) {
-        return setCurrentRecording(new SqlRecording(id, os));
+    public Collection<String> startRecording(String id, OutputStream os, Charset charset) {
+        return setCurrentRecording(new SqlRecording(id, os, charset));
     }
 
     private Collection<String> setCurrentRecording(SqlRecording rec) {

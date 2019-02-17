@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -110,7 +111,7 @@ public class SqlLogTest {
         File file = File.createTempFile("test", ".json");
         file.deleteOnExit();
         try (OutputStream os = new FileOutputStream(file)) {
-            sqlLog.startRecording("test", os);
+            sqlLog.startRecording("test", os, Charset.forName("UTF-8"));
             jdbcTemplate.execute("create table foo (id int)");
             jdbcTemplate.execute("insert into foo (id) values (1)");
             assertThat(sqlLog.getLogs()).isEmpty();
@@ -146,7 +147,7 @@ public class SqlLogTest {
             filesById.entrySet().forEach(entry ->
                     new Thread(() -> {
                         try (OutputStream os = new FileOutputStream(entry.getValue())) {
-                            sqlLog.startRecording(entry.getKey(), os);
+                            sqlLog.startRecording(entry.getKey(), os, Charset.forName("UTF-8"));
                             jdbcTemplate.execute(format("insert into foo (id) values ('%s')", entry.getKey()));
                             sqlLog.stopRecording(entry.getKey());
                             endLatch.countDown();
