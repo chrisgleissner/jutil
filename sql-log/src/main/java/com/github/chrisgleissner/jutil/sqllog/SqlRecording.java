@@ -74,7 +74,6 @@ public class SqlRecording implements Closeable {
                 ps.println("]");
             try {
                 ps.flush();
-                ps.close();
                 ps = null;
                 log.debug("Closed OutputStream for ID {}", id);
             } catch (Exception e) {
