@@ -13,31 +13,37 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Recording of SQL messages.
  */
 @Slf4j
-@ToString
 @RequiredArgsConstructor
 public class SqlRecording implements Closeable {
     private final SqlLog sqlLog;
-    @ToString.Include
     @Getter private final String id;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final List<String> messages = new LinkedList<>();
+    private final AtomicLong messageCount = new AtomicLong();
+    private final long threadId;
+    private final String threadName;
+
     private boolean firstWrite = true;
     private OutputStreamWriter osw;
 
     SqlRecording(SqlLog sqlLog, String id, OutputStream os, Charset charset) {
         this.sqlLog = sqlLog;
         this.id = id;
+        this.threadId = Thread.currentThread().getId();
+        this.threadName = Thread.currentThread().getName();
         if (os != null)
             this.osw = new OutputStreamWriter(os, charset);
     }
 
     void add(String msg) {
+        messageCount.incrementAndGet();
         if (isRecordToStreamEnabled())
             write(msg);
         else {
@@ -89,7 +95,6 @@ public class SqlRecording implements Closeable {
     @Override
     public void close() {
         sqlLog.stopRecording(id);
-        log.info("Stopped recording of SQL for ID {}", id);
     }
 
     void stopRecording() {
@@ -116,5 +121,16 @@ public class SqlRecording implements Closeable {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SqlRecording{" +
+                "id='" + id + '\'' +
+                ", threadId=" + threadId +
+                ", threadName=" + threadName +
+                ", location=" + (isRecordToStreamEnabled() ? "stream" : "heap") +
+                ", messageCount=" + messageCount.get() +
+                '}';
     }
 }

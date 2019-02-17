@@ -1,15 +1,15 @@
 package com.github.chrisgleissner.jutil.sqllog;
 
 
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
@@ -18,7 +18,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +38,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @Slf4j
 @RunWith(SpringRunner.class)
-@TestPropertySource(properties = "com.github.chrisgleissner.jutil.sqllog=true")
 @SpringBootTest
 public class SqlLogTest {
 
-    public static final String REPO_FIND_ALL = "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}";
     @Autowired
     private PersonRepo repo;
 
@@ -100,7 +101,7 @@ public class SqlLogTest {
             } finally {
                 sqlLog.setSqlLogEnabled(true);
                 repo.findAll();
-                assertThat(sqlLog.getAllMessages()).containsExactly(REPO_FIND_ALL);
+                assertThat(sqlLog.getAllMessages()).containsExactly("{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}");
             }
         }
     }
@@ -111,7 +112,7 @@ public class SqlLogTest {
         try (SqlRecording recording = sqlLog.startRecording("test")) {
             repo.findAll();
             Collection<String> matchingLogs = sqlLog.getMessagesContainingRegex("select.*?from person");
-            assertThat(matchingLogs).containsExactly(REPO_FIND_ALL);
+            assertThat(matchingLogs).containsExactly("{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}");
         }
     }
 
@@ -263,9 +264,37 @@ public class SqlLogTest {
     }
 
     @Test
-    public void preparedStatementWithQuotesInStrings() {
+    public void preparedStatement() {
+        List<Foo> foos = Arrays.asList(new Foo(1, "a"), new Foo(2, "b"));
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            jdbcTemplate.execute("create table foo (id varchar, name varchar)");
+            int[] updateCounts = jdbcTemplate.batchUpdate("insert into foo (id, name) values (?, ?)", new BatchPreparedStatementSetter() {
+                        @Override
+                        public void setValues(PreparedStatement ps, int i) throws SQLException {
+                            Foo foo = foos.get(i);
+                            ps.setInt(1, foo.id);
+                            ps.setString(2, foo.name);
+                        }
 
+                        @Override
+                        public int getBatchSize() {
+                            return foos.size();
+                        }
+                    });
+            assertThat(updateCounts).containsExactly(1, 1);
+            assertThat(recording.getMessages()).containsExactly(
+                    "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id varchar, name varchar)\"], \"params\":[]}",
+                    "{\"success\":true, \"type\":\"Prepared\", \"batch\":true, \"querySize\":1, \"batchSize\":2, \"query\":[\"insert into foo (id, name) values (?, ?)\"], \"params\":[[\"1\",\"a\"],[\"2\",\"b\"]]}");
+        } finally {
+            jdbcTemplate.execute("drop table foo");
 
+        }
+    }
+
+    @Value
+    private class Foo {
+        int id;
+        String name;
     }
 }
 

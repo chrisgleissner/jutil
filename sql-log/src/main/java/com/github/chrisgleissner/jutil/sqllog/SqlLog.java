@@ -10,6 +10,7 @@ import net.ttddyy.dsproxy.listener.logging.DefaultJsonQueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.QueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.proxy.DefaultConnectionIdManager;
+import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -30,8 +31,8 @@ import static java.util.stream.Collectors.toList;
  * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, OutputStream, Charset)} (to stream) to start
  * recording which returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.</p>
  */
-@ToString
 @Slf4j
+@ToString
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
     private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
 
@@ -89,7 +90,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
         SqlRecording recording = new SqlRecording(this, id, os, charset);
         currentRecording.set(recording);
         recordingsById.put(recording.getId(), recording);
-        log.info("Started {} recording of SQL for ID {}", recording.isRecordToStreamEnabled() ? "stream" : "heap", recording.getId());
+        log.info("Started {}", recording);
         return recording;
     }
 
@@ -102,7 +103,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
             throw new RuntimeException(String.format("Can't stop recording with ID %s since it doesn't exist", id));
         recording.stopRecording();
         currentRecording.set(null);
-        log.info("Stopped recording of SQL for ID {}. Found {} message(s) on heap.", id, recording.size());
+        log.info("Stopped {}", recording);
         return recording;
     }
 
@@ -164,7 +165,9 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
                 builder.traceMethods();
             if (this.logQueries)
                 builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
-            return builder.listener(this).build();
+            ProxyDataSource proxy = builder.listener(this).build();
+            log.info("Created proxy for DataSource bean with name {} and type {}: {}", beanName, bean.getClass().getName(), proxy);
+            return proxy;
         }
         return bean;
     }
