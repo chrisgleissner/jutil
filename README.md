@@ -63,6 +63,7 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
 records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x auto-configuration. 
 
+### Start and Stop
 To start recording:
 1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
 1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording`
@@ -72,23 +73,34 @@ via `SqlRecording.getMessages` and various methods in `SqlLog`) or written to th
 
 Call `sqlLog.stopRecording(id)` or close a `SqlRecording` instance to stop its recording. 
 
-Even without explicitly starting a recording, there is a default recording which is always active. You can get it via 
+### Default Recording
+Any SQL message generated whilst no recording is in progress gets recorded by a default recording which you can get via 
 `sqlLog.getDefaultRecording()`. This default recording can't be stopped,
 but you can temporarily stop all recording (including for the default recording) by calling `sqlLog.setEnabled(false)`.
 
-Example:
+### Example 
+
+After wiring 
+
 ```java
 @Configuration
 public class SampleConfig {
-    SampleConfig(JdbcTemplate jdbcTemplate, SqlLog sqlLog) throws FileNotFoundException {
-        try (SqlRecording recording = sqlLog.startRecording("sql", 
-                new FileOutputStream(new File("sql.json")), Charset.forName("UTF-8"))) {
+    SampleConfig(JdbcTemplate jdbcTemplate, SqlLog sqlLog) {
+        try (SqlRecording recording = sqlLog.startRecording("example", new File("sql.json"), Charset.forName("UTF-8"))) {
             jdbcTemplate.execute("create table foo (id int)");
         }
-        // 'create table foo (id int)' is now written to sql.json
     }
 }
 ```
+
+you will find that the `sql.json` file contains
+
+```json
+[{"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, "query":["create table foo (id int)"], "params":[]}
+```
+
+See [ExampleTest](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/test/java/com/github/chrisgleissner/jutil/sqllog/ExampleTest.java) 
+for a working example.
 
 ## Table Printer
 
