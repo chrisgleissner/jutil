@@ -40,6 +40,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -206,8 +207,8 @@ public class SqlLogTest {
                 }
             });
             repo.findByLastName("A");
-            beforeQueryLatch.await(1, SECONDS);
-            afterQueryLatch.await(1, SECONDS);
+            assertTrue(beforeQueryLatch.await(1, SECONDS));
+            assertTrue(afterQueryLatch.await(1, SECONDS));
         } finally {
             sqlLog.getQueryExecutionListeners().clear();
         }
