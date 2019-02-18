@@ -3,6 +3,9 @@ package com.github.chrisgleissner.jutil.sqllog;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import net.ttddyy.dsproxy.ExecutionInfo;
+import net.ttddyy.dsproxy.QueryInfo;
+import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
@@ -181,6 +185,31 @@ public class SqlLogTest {
             repo.findByLastName("A");
             assertThat(sqlLog.getAllMessages()).containsExactly(findByLastNameSql("A"));
             assertThat(sqlLog.getDefaultRecording().getMessages()).containsExactly(findByLastNameSql("A"));
+        }
+    }
+
+    @Test
+    public void queryListener() throws InterruptedException {
+        CountDownLatch beforeQueryLatch = new CountDownLatch(1);
+        CountDownLatch afterQueryLatch = new CountDownLatch(1);
+        try {
+            sqlLog.getQueryExecutionListeners().add(new QueryExecutionListener() {
+
+                @Override
+                public void beforeQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
+                    beforeQueryLatch.countDown();
+                }
+
+                @Override
+                public void afterQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
+                    afterQueryLatch.countDown();
+                }
+            });
+            repo.findByLastName("A");
+            beforeQueryLatch.await(1, SECONDS);
+            afterQueryLatch.await(1, SECONDS);
+        } finally {
+            sqlLog.getQueryExecutionListeners().clear();
         }
     }
 

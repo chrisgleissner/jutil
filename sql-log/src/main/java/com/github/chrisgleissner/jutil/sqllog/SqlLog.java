@@ -6,11 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
 import net.ttddyy.dsproxy.QueryInfo;
 import net.ttddyy.dsproxy.listener.NoOpQueryExecutionListener;
+import net.ttddyy.dsproxy.listener.QueryExecutionListener;
 import net.ttddyy.dsproxy.listener.logging.DefaultJsonQueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.QueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
+import net.ttddyy.dsproxy.transform.ParameterTransformer;
 import net.ttddyy.dsproxy.transform.QueryTransformer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -22,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.toList;
@@ -34,8 +37,13 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
     public static final String DEFAULT_ID = "default";
+
     public static final QueryTransformer identityQueryTransformer = transformInfo -> transformInfo.getQuery();
+    public static final ParameterTransformer identityParameterTransformer = (replacer, transformInfo) -> {
+    };
+
     public static final QueryTransformer noOpQueryTransformer = transformInfo -> "select 1";
+    public static final ParameterTransformer noOpParameterTransformer = (replacer, transformInfo) -> replacer.clearParameters();
 
     private final SqlRecording defaultRecording = new SqlRecording(this, DEFAULT_ID, null, null);
 
@@ -61,8 +69,14 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     @Getter
     private boolean enabled;
 
+    @Getter
+    private final Collection<QueryExecutionListener> queryExecutionListeners = new CopyOnWriteArrayList<>();
+
     @Getter @Setter
     private QueryTransformer queryTransformer = identityQueryTransformer;
+
+    @Getter @Setter
+    private ParameterTransformer parameterTransformer = identityParameterTransformer;
 
     SqlLog(boolean enabled, boolean propagateCallsToDb, boolean logQueries, boolean traceMethods) {
         this.enabled = enabled;
@@ -171,16 +185,44 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
         if (enabled && bean instanceof DataSource) {
             ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean);
-            if (this.traceMethods)
-                builder.traceMethods();
-            if (this.logQueries)
-                builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
-            builder.queryTransformer(transformInfo -> SqlLog.this.queryTransformer.transformQuery(transformInfo));
+
+            registerLoggingWith(builder);
+            registerTransformersWith(builder);
+            registerListenersWith(builder);
+
             ProxyDataSource proxy = builder.listener(this).build();
             log.info("Created proxy for DataSource bean with name {} and type {}: {}", beanName, bean.getClass().getName(), proxy);
             return proxy;
         }
         return bean;
+    }
+
+    private void registerListenersWith(ProxyDataSourceBuilder builder) {
+        builder.listener(new QueryExecutionListener() {
+            @Override
+            public void beforeQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
+                for (QueryExecutionListener listener : queryExecutionListeners)
+                    listener.beforeQuery(execInfo, queryInfoList);
+            }
+
+            @Override
+            public void afterQuery(ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
+                for (QueryExecutionListener listener : queryExecutionListeners)
+                    listener.afterQuery(execInfo, queryInfoList);
+            }
+        });
+    }
+
+    private void registerLoggingWith(ProxyDataSourceBuilder builder) {
+        if (this.traceMethods)
+            builder.traceMethods();
+        if (this.logQueries)
+            builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
+    }
+
+    private void registerTransformersWith(ProxyDataSourceBuilder builder) {
+        builder.queryTransformer(transformInfo -> SqlLog.this.queryTransformer.transformQuery(transformInfo));
+        builder.parameterTransformer((replacer, transformInfo) -> SqlLog.this.parameterTransformer.transformParameters(replacer, transformInfo));
     }
 
     @Override
@@ -212,6 +254,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     public void setPropagateCallsToDbEnabled(boolean propagateCallsToDbEnabled) {
         queryTransformer = propagateCallsToDbEnabled ? identityQueryTransformer : noOpQueryTransformer;
+        parameterTransformer = propagateCallsToDbEnabled ? identityParameterTransformer : noOpParameterTransformer;
         log.info("Propagate calls to DB enabled: {}", propagateCallsToDbEnabled);
     }
 
