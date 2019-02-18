@@ -16,7 +16,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import javax.sql.DataSource;
-import java.io.OutputStream;
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
@@ -28,21 +28,26 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * Records SQL messages either on heap or by writing them to an OutputStream.
- * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, OutputStream, Charset)} (to stream) to start
- * recording which returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.
+ * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, File, Charset)} (in file) to start
+ * recording. This returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.
  */
-@Slf4j
-@ToString
+@Slf4j @ToString
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
-    private final static InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<>();
+    public static final String DEFAULT_ID = "default";
 
-    @ToString.Exclude
+    private final SqlRecording defaultRecording = new SqlRecording(this, DEFAULT_ID, null, null);
+
     private final QueryLogEntryCreator logEntryCreator = new DefaultJsonQueryLogEntryCreator() {
         protected void writeTimeEntry(StringBuilder sb, ExecutionInfo execInfo, List<QueryInfo> queryInfoList) {
         }
     };
 
-    @ToString.Exclude
+    private final InheritableThreadLocal<SqlRecording> currentRecording = new InheritableThreadLocal<SqlRecording>() {
+        @Override protected SqlRecording initialValue() {
+            return defaultRecording;
+        }
+    };
+
     private final ConcurrentHashMap<String, SqlRecording> recordingsById = new ConcurrentHashMap<>();
 
     @Getter
@@ -52,16 +57,17 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     private final boolean traceMethods;
 
     @Getter
-    private boolean sqlLogEnabled;
+    private boolean enabled;
 
-    SqlLog(boolean sqlLogEnabled, boolean logQueries, boolean traceMethods) {
-        this.sqlLogEnabled = sqlLogEnabled;
+    SqlLog(boolean enabled, boolean logQueries, boolean traceMethods) {
+        this.enabled = enabled;
         this.logQueries = logQueries;
         this.traceMethods = traceMethods;
+        recordingsById.put(DEFAULT_ID, defaultRecording);
     }
 
-    public void setSqlLogEnabled(boolean sqlLogEnabled) {
-        this.sqlLogEnabled = sqlLogEnabled;
+    public void setEnabled(boolean sqlLogEnabled) {
+        this.enabled = sqlLogEnabled;
         log.info("SQL log enabled: {}", sqlLogEnabled);
     }
 
@@ -77,32 +83,33 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     }
 
     /**
-     * Starts a stream recording session for the specified ID. If a session with this ID is currently in progress,
+     * Starts a file recording session for the specified ID. If a session with this ID is currently in progress,
      * it is stopped first.
      *
      * @param id under which the recordings will be tracked
      * @return recorded heap SQL logs for previous recording of the specified ID, empty if no such recording exists
      */
-    public SqlRecording startRecording(String id, OutputStream os, Charset charset) {
-        if (currentRecording.get() != null)
-            throw new RuntimeException(String.format("Can't start recording with ID %s since you first need to " +
-                    "stop the current recording: %s", id, currentRecording.get()));
-        SqlRecording recording = new SqlRecording(this, id, os, charset);
-        currentRecording.set(recording);
-        recordingsById.put(recording.getId(), recording);
-        log.info("Started {}", recording);
-        return recording;
+    public SqlRecording startRecording(String id, File file, Charset charset) {
+        return recordingsById.computeIfAbsent(id, (i) -> {
+            SqlRecording recording = new SqlRecording(this, id, file, charset);
+            currentRecording.set(recording);
+            log.info("Started {}", recording);
+            return recording;
+        });
     }
 
     /**
      * Stops the recording with the specified ID and returns it, if existent. Alternatively, call {@link SqlRecording#close()}.
      */
     public SqlRecording stopRecording(String id) {
+        if (DEFAULT_ID.equals(id))
+            return defaultRecording;
+
         SqlRecording recording = recordingsById.remove(id);
         if (recording == null)
             throw new RuntimeException(String.format("Can't stop recording with ID %s since it doesn't exist", id));
         recording.stopRecording();
-        currentRecording.set(null);
+        currentRecording.set(defaultRecording);
         log.info("Stopped {}", recording);
         return recording;
     }
@@ -144,11 +151,14 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     }
 
     /**
-     * Stops all ongoing recordings and clears their recorded messages.
+     * Stops all ongoing recordings (except the default recording) and clears their recorded messages.
      */
     public void clear() {
-        recordingsById.values().forEach(SqlRecording::close);
-        recordingsById.clear();
+        recordingsById.values().forEach((r) -> {
+            r.clear();
+            r.close();
+        });
+        recordingsById.keySet().stream().filter(k -> !k.equals(DEFAULT_ID)).forEach(k -> recordingsById.remove(k));
     }
 
     @Override
@@ -158,7 +168,7 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     @Override
     public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
-        if (sqlLogEnabled && bean instanceof DataSource) {
+        if (enabled && bean instanceof DataSource) {
             ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean)
                     .connectionIdManager(new DefaultConnectionIdManager());
             if (this.traceMethods)
@@ -174,12 +184,27 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
 
     @Override
     public void afterQuery(ExecutionInfo executionInfo, List<QueryInfo> list) {
-        if (sqlLogEnabled) {
+        if (enabled) {
             String msg = logEntryCreator.getLogEntry(executionInfo, list, false, false);
             Optional.ofNullable(currentRecording.get()).ifPresent(r -> {
                 r.add(msg);
                 log.debug("{}: {}", r.getId(), msg);
             });
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SqlLog{" +
+                "currentRecording=" + currentRecording.get() +
+                ", recordingsById=" + recordingsById +
+                ", logQueries=" + logQueries +
+                ", traceMethods=" + traceMethods +
+                ", enabled=" + enabled +
+                '}';
+    }
+
+    public SqlRecording getDefaultRecording() {
+        return defaultRecording;
     }
 }

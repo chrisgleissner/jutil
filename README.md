@@ -68,11 +68,13 @@ To start recording:
 1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording`
 
 This will record all SQL messages sent via any DataSource bean. The recording is kept either on heap (accessible
-via `SqlRecording.getMessages` and various methods in `SqlLog`) or written to the specified OutputStream. 
-All SQL is JSON encoded. 
+via `SqlRecording.getMessages` and various methods in `SqlLog`) or written to the specified file. All SQL is JSON encoded. 
 
-Call `stopRecording` or close the `SqlRecording` instance to stop the recording. If recording to a stream, this will flush
-all messages and close the stream.
+Call `sqlLog.stopRecording(id)` or close a `SqlRecording` instance to stop its recording. 
+
+Even without explicitly starting a recording, there is a default recording which is always active. You can get it via 
+`sqlLog.getDefaultRecording()`. This default recording can't be stopped,
+but you can temporarily stop all recording (including for the default recording) by calling `sqlLog.setEnabled(false)`.
 
 Example:
 ```java

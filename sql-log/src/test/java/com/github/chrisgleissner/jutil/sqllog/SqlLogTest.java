@@ -68,11 +68,46 @@ public class SqlLogTest {
     @Test
     public void canStartRecordingIfAlreadyRecording() {
         sqlLog.startRecording("foo");
-        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> sqlLog.startRecording("bar"))
-                .withMessageContaining("Can't start recording with ID bar since you first need to stop the current recording");
         sqlLog.stopRecording("foo");
         sqlLog.startRecording("baz");
     }
+
+    @Test
+    public void attemptToRestartRecordingReturnsAlreadyStartedRecording() {
+        SqlRecording recording = sqlLog.startRecording("foo");
+        repo.findByLastName("A");
+        assertThat(sqlLog.startRecording("foo")).isSameAs(recording);
+        assertThat(recording.getMessages()).containsExactly(findByLastNameSql("A"));
+    }
+
+    @Test
+    public void defaultRecording() {
+        assertThat(sqlLog.getDefaultRecording()).isSameAs(sqlLog.getRecording(SqlLog.DEFAULT_ID));
+    }
+
+    private String findByLastNameSql(String lastName) {
+        return String.format("{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, " +
+                "\"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ " +
+                "from person person0_ where person0_.last_name=?\"], \"params\":[[\"%s\"]]}", lastName);
+    }
+
+    @Test
+    public void defaultRecordingAlwaysEnabled() {
+        assertThat(sqlLog.getDefaultRecording().getMessages()).isEmpty();
+        repo.findByLastName("A");
+
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            repo.findByLastName("B");
+            assertThat(recording.getMessages()).containsExactly(findByLastNameSql("B"));
+        }
+
+        repo.findByLastName("C");
+        assertThat(sqlLog.getDefaultRecording().getMessages()).containsExactly(findByLastNameSql("A"), findByLastNameSql("C"));
+
+        sqlLog.getDefaultRecording().clear();
+        assertThat(sqlLog.getDefaultRecording().getMessages()).isEmpty();
+    }
+
 
     @Test
     public void canStopRecordingThatDoesntExist() {
@@ -95,17 +130,50 @@ public class SqlLogTest {
     public void setSqlLogEnabled() {
         try (SqlRecording recording = sqlLog.startRecording("test")) {
             try {
-                sqlLog.setSqlLogEnabled(false);
-                repo.findAll();
+                sqlLog.setEnabled(false);
+                repo.findByLastName("A");
                 assertThat(sqlLog.getAllMessages()).isEmpty();
             } finally {
-                sqlLog.setSqlLogEnabled(true);
-                repo.findAll();
-                assertThat(sqlLog.getAllMessages()).containsExactly("{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}");
+                sqlLog.setEnabled(true);
+                repo.findByLastName("A");
+                assertThat(sqlLog.getAllMessages()).containsExactly(findByLastNameSql("A"));
             }
         }
     }
 
+    @Test
+    public void setSqlLogEnabledAlsoAffectsDefaultRecording() {
+        try {
+            sqlLog.setEnabled(false);
+            repo.findByLastName("A");
+            assertThat(sqlLog.getAllMessages()).isEmpty();
+            assertThat(sqlLog.getDefaultRecording().getMessages()).isEmpty();
+        } finally {
+            sqlLog.setEnabled(true);
+            repo.findByLastName("A");
+            assertThat(sqlLog.getAllMessages()).containsExactly(findByLastNameSql("A"));
+            assertThat(sqlLog.getDefaultRecording().getMessages()).containsExactly(findByLastNameSql("A"));
+        }
+    }
+
+    @Test
+    public void defaultRecordingKeepsRecordingAfterClose() {
+        sqlLog.getDefaultRecording().close();
+        repo.findByLastName("A");
+        assertThat(sqlLog.getDefaultRecording().getMessages()).containsExactly(findByLastNameSql("A"));
+    }
+
+    @Test
+    public void regularRecordingStopsRecordingAfterClose() {
+        SqlRecording r;
+        try (SqlRecording recording = sqlLog.startRecording("test")) {
+            r = recording;
+            repo.findByLastName("A");
+        }
+        assertThat(r.getMessages()).containsExactly(findByLastNameSql("A"));
+        repo.findByLastName("B");
+        assertThat(r.getMessages()).containsExactly(findByLastNameSql("A"));
+    }
 
     @Test
     public void getMessagesContainingRegex() {
@@ -139,7 +207,18 @@ public class SqlLogTest {
             repo.findAll();
             assertThat(recording.getMessages()).containsExactly(msg);
         }
+    }
 
+    @Test
+    public void clearMessages() {
+        String id = UUID.randomUUID().toString();
+        String msg = "{\"success\":true, \"type\":\"Prepared\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"select person0_.id as id1_0_, person0_.first_name as first_na2_0_, person0_.last_name as last_nam3_0_ from person person0_\"], \"params\":[[]]}";
+        try (SqlRecording recording = sqlLog.startRecording(id)) {
+            assertThat(recording.getMessages()).isEmpty();
+            repo.findAll();
+            assertThat(recording.getAndClearMessages()).containsExactly(msg);
+            assertThat(recording.getMessages()).isEmpty();
+        }
     }
 
     @Test
@@ -165,14 +244,14 @@ public class SqlLogTest {
         File file = File.createTempFile("test", ".json");
         file.deleteOnExit();
         try (OutputStream os = new FileOutputStream(file);
-             SqlRecording recording = sqlLog.startRecording("test", os, Charset.forName("UTF-8"))) {
+             SqlRecording recording = sqlLog.startRecording("test", file, Charset.forName("UTF-8"))) {
             jdbcTemplate.execute("create table foo (id int, name varchar)");
             jdbcTemplate.execute("insert into foo (id, name) values (1, 'Hans\tMü\"ller\nʤ')");
             assertThat(sqlLog.getAllMessages()).isEmpty();
         } finally {
             jdbcTemplate.execute("drop table foo");
         }
-        assertThat(file).hasSameContentAs(new File("src/test/resources/streamRecording.json"));
+        assertThat(file).hasSameContentAs(new File("src/test/resources/fileRecording.json"));
     }
 
     @Test
@@ -191,8 +270,7 @@ public class SqlLogTest {
             CountDownLatch endLatch = new CountDownLatch(filesById.size());
             filesById.entrySet().forEach(entry ->
                     new Thread(() -> {
-                        try (OutputStream os = new FileOutputStream(entry.getValue());
-                             SqlRecording recording = sqlLog.startRecording(entry.getKey(), os, Charset.forName("UTF-8"))) {
+                        try (SqlRecording recording = sqlLog.startRecording(entry.getKey(), entry.getValue(), Charset.forName("UTF-8"))) {
                             jdbcTemplate.execute(format("insert into foo (id) values ('%s')", entry.getKey()));
                         } catch (Exception e) {
                             throw new RuntimeException(e);
