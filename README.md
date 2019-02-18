@@ -61,21 +61,25 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 ## Sql Log
 
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
-records SQL executions in memory or to an OutputStream, using Spring Boot 2.1.x auto-configuration. 
+records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.1.x auto-configuration. 
+
+To use this feature, declare a dependency on `com.github.chrisgleissner:jutil-sql-log`.
 
 ### Start and Stop
-To start recording:
-1. Declare a dependency on com.github.chrisgleissner:jutil-sql-log
-1. Wire in the `SqlLog` bean and call `startRecording` which will give you a `SqlRecording`
+To start recording, wire in the `SqlLog` bean and call `startRecording` which returns a `SqlRecording`.
+You will now record all SQL messages sent via any DataSource bean as part of your current thread or any thread which it starts. 
 
-This will record all SQL messages sent via any DataSource bean. The recording is kept either on heap (accessible
-via `SqlRecording.getMessages` and various methods in `SqlLog`) or written to the specified file. All SQL is JSON encoded. 
+The recording is kept either on heap (accessible via `sqlRecording.getMessages` and various methods in `SqlLog`) or written to the specified file. 
+All SQL is JSON encoded. 
 
 Call `sqlLog.stopRecording(id)` or close a `SqlRecording` instance to stop its recording. 
 
 ### Default Recording
-Any SQL message generated whilst no recording is in progress gets recorded by a default recording which you can get via 
-`sqlLog.getDefaultRecording()`. This default recording can't be stopped,
+
+Any SQL message not recorded otherwise is captured by a default recording which you can get via 
+`sqlLog.getDefaultRecording()`.
+
+This default recording can't be stopped,
 but you can temporarily stop all recording (including for the default recording) by calling `sqlLog.setEnabled(false)`.
 
 ### Example 
