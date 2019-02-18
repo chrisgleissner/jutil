@@ -26,6 +26,8 @@ public class ExampleTest {
             try (SqlRecording recording = sqlLog.startRecording("example", FILE, Charset.forName("UTF-8"))) {
                 jdbcTemplate.execute("create table foo (id int)");
                 jdbcTemplate.execute("insert into foo (id) values (1)");
+            } finally {
+                jdbcTemplate.execute("drop table foo");
             }
         }
     }
