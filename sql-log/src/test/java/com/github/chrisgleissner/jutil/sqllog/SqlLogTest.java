@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -44,7 +45,7 @@ public class SqlLogTest {
     @Autowired
     private PersonRepo repo;
 
-    @Autowired
+    @SpyBean
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -78,6 +79,33 @@ public class SqlLogTest {
         repo.findByLastName("A");
         assertThat(sqlLog.startRecording("foo")).isSameAs(recording);
         assertThat(recording.getMessages()).containsExactly(findByLastNameSql("A"));
+    }
+
+    @Test
+    public void queryTransformerWorks() {
+        try {
+            try {
+                jdbcTemplate.execute("create table foo (id int)");
+                sqlLog.setQueryTransformer(transformInfo -> "insert into foo (id) values (2)");
+                jdbcTemplate.execute("insert into foo (id) values (1)");
+            } finally {
+                sqlLog.setQueryTransformer(SqlLog.identityQueryTransformer);
+            }
+            assertThat(jdbcTemplate.queryForObject("select count(*) from foo where id = 1", Integer.class)).isEqualTo(0);
+            assertThat(jdbcTemplate.queryForObject("select count(*) from foo where id = 2", Integer.class)).isEqualTo(1);
+        } finally {
+            jdbcTemplate.execute("drop table foo");
+        }
+    }
+
+    @Test
+    public void noOpQueryTransformerWorks() {
+        try {
+            sqlLog.setPropagateCallsToDbEnabled(false);
+            jdbcTemplate.execute("invalid sql");
+        } finally {
+            sqlLog.setPropagateCallsToDbEnabled(true);
+        }
     }
 
     @Test
@@ -347,18 +375,18 @@ public class SqlLogTest {
         try (SqlRecording recording = sqlLog.startRecording("test")) {
             jdbcTemplate.execute("create table foo (id varchar, name varchar)");
             int[] updateCounts = jdbcTemplate.batchUpdate("insert into foo (id, name) values (?, ?)", new BatchPreparedStatementSetter() {
-                        @Override
-                        public void setValues(PreparedStatement ps, int i) throws SQLException {
-                            Foo foo = foos.get(i);
-                            ps.setInt(1, foo.id);
-                            ps.setString(2, foo.name);
-                        }
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    Foo foo = foos.get(i);
+                    ps.setInt(1, foo.id);
+                    ps.setString(2, foo.name);
+                }
 
-                        @Override
-                        public int getBatchSize() {
-                            return foos.size();
-                        }
-                    });
+                @Override
+                public int getBatchSize() {
+                    return foos.size();
+                }
+            });
             assertThat(updateCounts).containsExactly(1, 1);
             assertThat(recording.getMessages()).containsExactly(
                     "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id varchar, name varchar)\"], \"params\":[]}",

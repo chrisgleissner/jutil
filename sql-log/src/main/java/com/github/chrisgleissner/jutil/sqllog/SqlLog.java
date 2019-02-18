@@ -1,7 +1,7 @@
 package com.github.chrisgleissner.jutil.sqllog;
 
 import lombok.Getter;
-import lombok.ToString;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.ttddyy.dsproxy.ExecutionInfo;
 import net.ttddyy.dsproxy.QueryInfo;
@@ -9,9 +9,9 @@ import net.ttddyy.dsproxy.listener.NoOpQueryExecutionListener;
 import net.ttddyy.dsproxy.listener.logging.DefaultJsonQueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.QueryLogEntryCreator;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
-import net.ttddyy.dsproxy.proxy.DefaultConnectionIdManager;
 import net.ttddyy.dsproxy.support.ProxyDataSource;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
+import net.ttddyy.dsproxy.transform.QueryTransformer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
@@ -31,9 +31,11 @@ import static java.util.stream.Collectors.toList;
  * Use {@link #startRecording(String)} (on heap) or {@link #startRecording(String, File, Charset)} (in file) to start
  * recording. This returns a {@link SqlRecording}. To stop recording, call {@link SqlRecording#close()}.
  */
-@Slf4j @ToString
+@Slf4j
 public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProcessor {
     public static final String DEFAULT_ID = "default";
+    public static final QueryTransformer identityQueryTransformer = transformInfo -> transformInfo.getQuery();
+    public static final QueryTransformer noOpQueryTransformer = transformInfo -> "select 1";
 
     private final SqlRecording defaultRecording = new SqlRecording(this, DEFAULT_ID, null, null);
 
@@ -59,16 +61,15 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     @Getter
     private boolean enabled;
 
-    SqlLog(boolean enabled, boolean logQueries, boolean traceMethods) {
+    @Getter @Setter
+    private QueryTransformer queryTransformer = identityQueryTransformer;
+
+    SqlLog(boolean enabled, boolean propagateCallsToDb, boolean logQueries, boolean traceMethods) {
         this.enabled = enabled;
         this.logQueries = logQueries;
         this.traceMethods = traceMethods;
         recordingsById.put(DEFAULT_ID, defaultRecording);
-    }
-
-    public void setEnabled(boolean sqlLogEnabled) {
-        this.enabled = sqlLogEnabled;
-        log.info("SQL log enabled: {}", sqlLogEnabled);
+        setPropagateCallsToDbEnabled(propagateCallsToDb);
     }
 
     /**
@@ -169,12 +170,12 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
     @Override
     public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
         if (enabled && bean instanceof DataSource) {
-            ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean)
-                    .connectionIdManager(new DefaultConnectionIdManager());
+            ProxyDataSourceBuilder builder = ProxyDataSourceBuilder.create((DataSource) bean);
             if (this.traceMethods)
                 builder.traceMethods();
             if (this.logQueries)
                 builder.logQueryBySlf4j(SLF4JLogLevel.DEBUG);
+            builder.queryTransformer(transformInfo -> SqlLog.this.queryTransformer.transformQuery(transformInfo));
             ProxyDataSource proxy = builder.listener(this).build();
             log.info("Created proxy for DataSource bean with name {} and type {}: {}", beanName, bean.getClass().getName(), proxy);
             return proxy;
@@ -202,6 +203,16 @@ public class SqlLog extends NoOpQueryExecutionListener implements BeanPostProces
                 ", traceMethods=" + traceMethods +
                 ", enabled=" + enabled +
                 '}';
+    }
+
+    public void setEnabled(boolean sqlLogEnabled) {
+        this.enabled = sqlLogEnabled;
+        log.info("SQL log enabled: {}", sqlLogEnabled);
+    }
+
+    public void setPropagateCallsToDbEnabled(boolean propagateCallsToDbEnabled) {
+        queryTransformer = propagateCallsToDbEnabled ? identityQueryTransformer : noOpQueryTransformer;
+        log.info("Propagate calls to DB enabled: {}", propagateCallsToDbEnabled);
     }
 
     public SqlRecording getDefaultRecording() {
