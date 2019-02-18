@@ -25,6 +25,7 @@ public class ExampleTest {
         ExampleConfig(JdbcTemplate jdbcTemplate, SqlLog sqlLog) {
             try (SqlRecording recording = sqlLog.startRecording("example", FILE, Charset.forName("UTF-8"))) {
                 jdbcTemplate.execute("create table foo (id int)");
+                jdbcTemplate.execute("insert into foo (id) values (1)");
             }
         }
     }
@@ -37,6 +38,7 @@ public class ExampleTest {
 
     @Test
     public void canWriteToFile() {
-        assertThat(FILE).hasContent("[{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]}]");
+        assertThat(FILE).hasContent("[{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"create table foo (id int)\"], \"params\":[]},\n" +
+                "{\"success\":true, \"type\":\"Statement\", \"batch\":false, \"querySize\":1, \"batchSize\":0, \"query\":[\"insert into foo (id) values (1)\"], \"params\":[]}]");
     }
 }
