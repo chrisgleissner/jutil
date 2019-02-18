@@ -87,7 +87,8 @@ after wiring
 @Configuration
 public class SampleConfig {
     SampleConfig(JdbcTemplate jdbcTemplate, SqlLog sqlLog) {
-        try (SqlRecording recording = sqlLog.startRecording("example", new File("sql.json"), Charset.forName("UTF-8"))) {
+        try (SqlRecording recording = sqlLog.startRecording("example", 
+                new File("sql.json"), Charset.forName("UTF-8"))) {
             jdbcTemplate.execute("create table foo (id int)");
         }
     }
@@ -97,7 +98,8 @@ public class SampleConfig {
 you will find that the `sql.json` file contains
 
 ```json
-[{"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, "query":["create table foo (id int)"], "params":[]}
+[{"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, 
+"query":["create table foo (id int)"], "params":[]}]
 ```
 
 ## Table Printer
