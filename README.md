@@ -80,7 +80,8 @@ but you can temporarily stop all recording (including for the default recording)
 
 ### Example 
 
-After wiring 
+As per [ExampleTest](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/test/java/com/github/chrisgleissner/jutil/sqllog/ExampleTest.java),
+after wiring 
 
 ```java
 @Configuration
@@ -98,9 +99,6 @@ you will find that the `sql.json` file contains
 ```json
 [{"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, "query":["create table foo (id int)"], "params":[]}
 ```
-
-See [ExampleTest](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/test/java/com/github/chrisgleissner/jutil/sqllog/ExampleTest.java) 
-for a working example.
 
 ## Table Printer
 
