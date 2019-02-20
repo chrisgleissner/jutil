@@ -4,6 +4,7 @@
 [![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 
+
 Java utilities for Protobuf message partitioning, table pretty printing and SQL execution recording.
 
 Features:
@@ -47,6 +48,8 @@ compile 'com.github.chrisgleissner:jutil-table:1.1.8'
 
 ## Protobuf Utilities
 
+[![Javadocs](https://www.javadoc.io/badge/com.github.chrisgleissner/jutil-protobuf.svg)](https://www.javadoc.io/doc/com.github.chrisgleissner/jutil-protobuf)
+
 The [ProtobufFieldPartitioner](https://github.com/chrisgleissner/jutil/blob/master/protobuf/src/main/java/com/github/chrisgleissner/jutil/protobuf/ProtobufFieldPartitioner.java) 
 is useful for distributing the elements of a repeated field in a Protobuf message over multiple newly created messages. 
 
@@ -59,6 +62,8 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 ```
 
 ## Sql Log
+
+[![Javadocs](https://www.javadoc.io/badge/com.github.chrisgleissner/jutil-sql-log.svg)](https://www.javadoc.io/doc/com.github.chrisgleissner/jutil-sql-log)
 
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
 records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.1.x auto-configuration. 
@@ -108,6 +113,8 @@ you will find that the `sql.json` file contains
 ```
 
 ## Table Printer
+
+[![Javadocs](https://www.javadoc.io/badge/com.github.chrisgleissner/jutil-table.svg)](https://www.javadoc.io/doc/com.github.chrisgleissner/jutil-table)
 
 The [TablePrinter](https://github.com/chrisgleissner/jutil/blob/master/table/src/main/java/com/github/chrisgleissner/jutil/table/TablePrinter.java) 
 serializes a table to a pretty-printed string, either using ASCII or UTF borders.
