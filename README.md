@@ -66,7 +66,7 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 [![Javadocs](https://www.javadoc.io/badge/com.github.chrisgleissner/jutil-sql-log.svg)](https://www.javadoc.io/doc/com.github.chrisgleissner/jutil-sql-log)
 
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
-records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.1.x auto-configuration. 
+records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.1.x auto-configuration and relies on the [net.ttddyy:datasource-proxy](https://github.com/ttddyy/datasource-proxy). 
 
 To use this feature, declare a dependency on `com.github.chrisgleissner:jutil-sql-log`.
 
