@@ -11,18 +11,24 @@ import java.util.Arrays;
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
 @Slf4j
 public class TablePrinterTest {
 
-    private static final Iterable<String> HEADERS = Arrays.asList("id", "name", "age");
-    private static final Iterable<Iterable<String>> DATA = Arrays.asList(
-            Arrays.asList("1", "john", null),
-            Arrays.asList("2", "tom", "20"),
-            Arrays.asList("3", "verylongname", null),
-            Arrays.asList("4", "mary", "30"));
+    private static final Iterable<String> HEADERS = asList("id", "name", "age");
 
+    private static final Iterable<Iterable<String>> DATA = asList(
+            asList("1", "john", null),
+            asList("2", "tom", "20"),
+            asList("3", "verylongname", null),
+            asList("4", "mary", "30"));
+
+    private static final Iterable<Iterable<String>> SOME_UTF8_DATA = asList(
+            asList("1", "euro: €", "€"),
+            asList("2", "drachma: ₯", "₯"),
+            asList("3", "rupee: ₹", "₹"));
 
     @Test
     public void nullHeaders() {
@@ -70,6 +76,17 @@ public class TablePrinterTest {
     }
 
     @Test
+    public void asciiWithSomeUtfContent() {
+        assertTable("asciiWithSomeUtfContent", TablePrinter.builder().nullValue("").maxCellWidth(8).build().print(HEADERS, SOME_UTF8_DATA));
+    }
+
+    @Test
+    public void utfWithSomeUtfContent() {
+        assertTable("utfWithSomeUtfContent", TablePrinter.builder().nullValue("").maxCellWidth(8)
+                .tableFormat(new Utf8TableFormat()).build().print(HEADERS, SOME_UTF8_DATA));
+    }
+
+    @Test
     public void utf() {
         assertTable("utf", TablePrinter.builder().nullValue("").maxCellWidth(10)
                 .startRow(1).endRow(3)
@@ -91,46 +108,46 @@ public class TablePrinterTest {
 
     @Test
     public void headerColumnCountTooLarge() {
-        Iterable<String> headers = Arrays.asList("id", "name", "age", "city");
-        Iterable<Iterable<String>> data = Arrays.asList(
-                Arrays.asList("1", "john", null),
-                Arrays.asList("2", "tom", "20"),
-                Arrays.asList("3", "verylongname", null),
-                Arrays.asList("4", "mary", "30"));
+        Iterable<String> headers = asList("id", "name", "age", "city");
+        Iterable<Iterable<String>> data = asList(
+                asList("1", "john", null),
+                asList("2", "tom", "20"),
+                asList("3", "verylongname", null),
+                asList("4", "mary", "30"));
         assertTable("headerColumnCountTooLarge", DefaultTablePrinter.print(headers, data));
     }
 
     @Test
     public void newLinesAndWraparound() {
-        Iterable<String> headers = Arrays.asList("id", "name", "age", "city");
-        Iterable<Iterable<String>> data = Arrays.asList(
-                Arrays.asList("1", "johnWithVeryLong\tName", "15", "london"),
-                Arrays.asList("2", "tom\nWithNewLinesAndVeryLongName", "\n\n\n20", "\n\n\n\n\nmunich"),
-                Arrays.asList("3", "verylongname", null),
-                Arrays.asList("4", "mary", "30"));
+        Iterable<String> headers = asList("id", "name", "age", "city");
+        Iterable<Iterable<String>> data = asList(
+                asList("1", "johnWithVeryLong\tName", "15", "london"),
+                asList("2", "tom\nWithNewLinesAndVeryLongName", "\n\n\n20", "\n\n\n\n\nmunich"),
+                asList("3", "verylongname", null),
+                asList("4", "mary", "30"));
         assertTable("newLinesAndWraparound", TablePrinter.builder().maxCellWidth(10).build().print(headers, data));
     }
 
     @Test
     public void headerColumnCountTooLittle() {
-        Iterable<String> headers = Arrays.asList("id", "name");
-        Iterable<Iterable<String>> data = Arrays.asList(
-                Arrays.asList("1", "john", null),
-                Arrays.asList("2", "tom", "20"),
-                Arrays.asList("3", "verylongname", null),
-                Arrays.asList("4", "mary", "30"));
+        Iterable<String> headers = asList("id", "name");
+        Iterable<Iterable<String>> data = asList(
+                asList("1", "john", null),
+                asList("2", "tom", "20"),
+                asList("3", "verylongname", null),
+                asList("4", "mary", "30"));
         assertTable("headerColumnCountTooLittle", DefaultTablePrinter.print(headers, data));
 
     }
 
     @Test
     public void rowColumnCountVaries() {
-        Iterable<String> headers = Arrays.asList("id", "name", "age");
-        Iterable<Iterable<String>> data = Arrays.asList(
-                Arrays.asList("1", "john", null),
-                Arrays.asList("2", "tom", "20", "munich"),
-                Arrays.asList("3", "verylongname", null),
-                Arrays.asList("4", "mary", "30", "orlando", "usa"));
+        Iterable<String> headers = asList("id", "name", "age");
+        Iterable<Iterable<String>> data = asList(
+                asList("1", "john", null),
+                asList("2", "tom", "20", "munich"),
+                asList("3", "verylongname", null),
+                asList("4", "mary", "30", "orlando", "usa"));
         assertTable("rowColumnCountVaries", DefaultTablePrinter.print(headers, data));
     }
 
