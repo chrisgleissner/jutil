@@ -10,8 +10,10 @@ import lombok.Data;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.*;
-import java.util.stream.IntStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.StreamSupport;
 
 import static java.lang.Integer.MAX_VALUE;
@@ -27,24 +29,31 @@ import static java.util.stream.Collectors.toList;
 @Builder
 public class TablePrinter {
 
-    public static TablePrinter DefaultTablePrinter = TablePrinter.builder().build();
+    public static final TablePrinter DefaultTablePrinter = TablePrinter.builder().build();
 
     @Builder.Default
-    private String nullValue = "";
+    private final String nullValue = "";
+
     @Builder.Default
-    private TableFormat tableFormat = new AsciiTableFormat();
+    private final TableFormat tableFormat = new AsciiTableFormat();
+
     @Builder.Default
-    private int maxCellWidth = 100;
+    private final int maxCellWidth = 100;
+
     @Builder.Default
-    private boolean wraparound = true;
+    private final boolean wraparound = true;
+
     @Builder.Default
-    private int startRow = 0;
+    private final int startRow = 0;
+
     @Builder.Default
-    private int endRow = MAX_VALUE;
+    private final int endRow = MAX_VALUE;
+
     @Builder.Default
-    private boolean horizontalDividers = false;
+    private final boolean horizontalDividers = false;
+
     @Builder.Default
-    private boolean rowNumbers = false;
+    private final boolean rowNumbers = false;
 
     private class TableString {
         private TableData tableData;
@@ -151,27 +160,31 @@ public class TablePrinter {
 
         @Data
         private class Cell {
-            private List<String> lines = new ArrayList<>();
+            private List<String> lines = new LinkedList<>();
 
             public Cell(String s) {
                 if (s == null)
                     s = nullValue;
+
                 s = s.replace("\t", "        ");
+
                 if (wraparound) {
-                    StringBuilder sb = new StringBuilder();
-                    for (char c : s.toCharArray()) {
-                        if (c == '\n' || sb.length() == maxCellWidth) {
-                            lines.add(sb.toString());
-                            sb = new StringBuilder();
-                        }
-                        if (c != '\n')
+                    String[] originalLines = s.split("(\r\n|\n|\r)");
+                    final StringBuilder sb = new StringBuilder(maxCellWidth);
+                    for (String originalLine : originalLines) {
+                        sb.setLength(0);
+                        for (char c : originalLine.toCharArray()) {
+                            if (sb.length() == maxCellWidth) {
+                                lines.add(sb.toString());
+                                sb.setLength(0);
+                            }
                             sb.append(c);
-                    }
-                    if (sb.length() > 0)
+                        }
                         lines.add(sb.toString());
+                    }
                 }
                 else {
-                    s = s.replace("\n", "");
+                    s = s.replace("[\n\r]", "");
                     lines.add(s.substring(0, Math.min(maxCellWidth, s.length())));
                 }
             }
@@ -195,7 +208,7 @@ public class TablePrinter {
 
         private List<Cell> prepareHeaders(TableProvider tableProvider) {
             Iterable<String> headerIteratable = tableProvider.getHeaders();
-            List<Cell> headers = new ArrayList<>();
+            List<Cell> headers = new LinkedList<>();
             if (rowNumbers)
                 headers.add(new Cell("#"));
             if (headerIteratable != null)
@@ -232,12 +245,12 @@ public class TablePrinter {
         }
 
         private List<List<Cell>> prepareRows(TableProvider tableProvider) {
-            List<List<Cell>> rows = new ArrayList<>();
+            List<List<Cell>> rows = new LinkedList<>();
             if (tableProvider.getRows() != null) {
                 int i = 0;
                 for (Iterable<String> row : tableProvider.getRows()) {
                     if (i >= startRow && i <= endRow) {
-                        List<Cell> cells = new ArrayList<>();
+                        List<Cell> cells = new LinkedList<>();
                         cells.addAll(StreamSupport.stream(row.spliterator(), true).map(Cell::new).collect(toList()));
                         if (rowNumbers)
                             cells.add(0, new Cell(Integer.toString(i)));

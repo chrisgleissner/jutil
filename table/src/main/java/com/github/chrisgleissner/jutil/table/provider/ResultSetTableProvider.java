@@ -6,8 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ResultSetTableProvider implements TableProvider {
-
-    private ResultSet rs;
+    private final ResultSet rs;
     private final int columnCount;
 
     public ResultSetTableProvider(ResultSet resultSet) {

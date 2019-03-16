@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
@@ -41,6 +40,17 @@ public class TablePrinterTest {
     }
 
     @Test
+    public void asciiWithNewlineAndCarriageReturn() {
+        assertTable("asciiWithNewlineAndCarriageReturn", TablePrinter.builder().maxCellWidth(5).build().print(
+                asList("id", "  1\r\n2", "3\n\r4"),
+                asList(
+                asList("1", "     0123456\r\n789", null),
+                asList("2", null, "  0123456\n789"),
+                asList("3", null, "  0123456\r789"))));
+    }
+
+
+    @Test
     public void asciiNoData() {
         assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, newArrayList()));
     }
@@ -63,6 +73,11 @@ public class TablePrinterTest {
     @Test
     public void asciiLineNumbers() {
         assertTable("asciiLineNumbers", TablePrinter.builder().rowNumbers(true).startRow(2).build().print(HEADERS, DATA));
+    }
+
+    @Test
+    public void asciiLineNumbersWithDefault() {
+        assertTable("asciiLineNumbersWithDefault", TablePrinter.builder().rowNumbers(true).build().print(HEADERS, DATA));
     }
 
     @Test
