@@ -24,26 +24,26 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.8</version>
+    <version>1.1.9</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-sql-log</artifactId>
-    <version>1.1.8</version>
+    <version>1.1.9</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.8</version>
+    <version>1.1.9</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.8'
-compile 'com.github.chrisgleissner:jutil-sql-log:1.1.8'
-compile 'com.github.chrisgleissner:jutil-table:1.1.8'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.9'
+compile 'com.github.chrisgleissner:jutil-sql-log:1.1.9'
+compile 'com.github.chrisgleissner:jutil-table:1.1.9'
 ```
 
 ## Protobuf Utilities
@@ -179,7 +179,7 @@ results in:
 As per the example above, if you have a very large data structure, you may want to use the `startRow` and `endRow` builder methods 
 to only print the specified range. You can also set the maximum cell width (defaults to 100) and control the wrap-aroud of long cells (enabled by default).
 
-Newlines are supported and tabs are rendered as 8 spaces.
+Newlines are supported and tabs are rendered as 8 spaces (configurable).
 
 ### 3rd Party Adapters
 
