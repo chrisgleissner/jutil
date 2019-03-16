@@ -128,17 +128,20 @@ public class TablePrinter {
                 printTopEdge();
                 printHeaders(tableData.getHeaders());
                 printUnderHeaders(tableData.getRows().isEmpty());
-
-                if (!tableData.getRows().isEmpty()) {
-                    for (int i = 0; i < tableData.getRows().size(); i++) {
-                        if (i > 0 && horizontalDividers)
-                            printHorizontalDivider();
-                        printRow(tableData.getRows().get(i));
-                    }
-                    printBottomEdge();
-                }
+                writeRows();
             }
             pw.flush();
+        }
+
+        private void writeRows() {
+            if (!tableData.getRows().isEmpty()) {
+                for (int i = 0; i < tableData.getRows().size(); i++) {
+                    if (i > 0 && horizontalDividers)
+                        printHorizontalDivider();
+                    printRow(tableData.getRows().get(i));
+                }
+                printBottomEdge();
+            }
         }
 
         private void createPrintWriter(OutputStream os) {
@@ -163,24 +166,27 @@ public class TablePrinter {
             int maxLines = cells.stream().mapToInt(c -> c.getLines().size()).max().orElse(0);
             for (int lineIndex = 0; lineIndex < maxLines; lineIndex++) {
                 pw.append(left);
-                for (int cellIndex = 0; cellIndex < tableData.numberOfCellWidths(); cellIndex++) {
-                    if (cellIndex > 0)
-                        pw.append(divider);
-                    pw.append(' ');
-
-                    String line = "";
-                    if (cellIndex < cells.size())
-                        line = cells.get(cellIndex).getLine(lineIndex);
-
-                    pw.append(line, 0, min(maxCellWidth, line.length()));
-
-                    for (int k = 0; k < tableData.getCellWidth(cellIndex) - cellLength(line); k++)
-                        pw.append(' ');
-
-                    pw.append(' ');
-                }
+                print(divider, cells, lineIndex);
                 pw.append(right);
                 pw.append('\n');
+            }
+        }
+
+        private void print(char divider, List<TableData.Cell> cells, int lineIndex) {
+            for (int cellIndex = 0; cellIndex < tableData.numberOfCellWidths(); cellIndex++) {
+                if (cellIndex > 0)
+                    pw.append(divider);
+                pw.append(' ');
+
+                String line = "";
+                if (cellIndex < cells.size())
+                    line = cells.get(cellIndex).getLine(lineIndex);
+
+                pw.append(line, 0, min(maxCellWidth, line.length()));
+
+                for (int k = 0; k < tableData.getCellWidth(cellIndex) - cellLength(line); k++)
+                    pw.append(' ');
+                pw.append(' ');
             }
         }
 
@@ -229,10 +235,11 @@ public class TablePrinter {
         private final List<List<Cell>> rows;
         private TableData(TableProvider tableProvider) {
             rows = prepareRows(tableProvider);
-            updateCellWidthsForRows();
+            for (Iterable<Cell> row : rows)
+                updateCellWidths(row);
 
             headers = prepareHeaders(tableProvider);
-            updateCellWidthsForHeaders();
+            updateCellWidths(headers);
         }
 
         private List<Cell> prepareHeaders(TableProvider tableProvider) {
@@ -247,17 +254,9 @@ public class TablePrinter {
             return headers;
         }
 
-        private void updateCellWidthsForRows() {
-            for (Iterable<Cell> row : rows) {
-                int i = 0;
-                for (Cell cell : row)
-                    setCellWidth(i++, cell.lines.stream().mapToInt(l -> cellLength(l)).max().orElse(0));
-            }
-        }
-
-        private void updateCellWidthsForHeaders() {
+        private void updateCellWidths(Iterable<Cell> row) {
             int i = 0;
-            for (Cell cell : headers)
+            for (Cell cell : row)
                 setCellWidth(i++, cell.lines.stream().mapToInt(l -> cellLength(l)).max().orElse(0));
         }
 
@@ -276,19 +275,23 @@ public class TablePrinter {
         private List<List<Cell>> prepareRows(TableProvider tableProvider) {
             List<List<Cell>> rows = new LinkedList<>();
             if (tableProvider.getRows() != null) {
-                int i = 0;
+                int index = 0;
                 for (Iterable<String> row : tableProvider.getRows()) {
-                    if (i >= startRow && i <= endRow) {
-                        List<Cell> cells = new LinkedList<>();
-                        cells.addAll(StreamSupport.stream(row.spliterator(), true).map(Cell::new).collect(toList()));
-                        if (rowNumbers)
-                            cells.add(0, new Cell(Integer.toString(i)));
-                        rows.add(cells);
-                    }
-                    i++;
+                    prepareRow(rows, index, row);
+                    index++;
                 }
             }
             return rows;
+        }
+
+        private void prepareRow(List<List<Cell>> rows, int index, Iterable<String> row) {
+            if (index >= startRow && index <= endRow) {
+                List<Cell> cells = new LinkedList<>();
+                cells.addAll(StreamSupport.stream(row.spliterator(), true).map(Cell::new).collect(toList()));
+                if (rowNumbers)
+                    cells.add(0, new Cell(Integer.toString(index)));
+                rows.add(cells);
+            }
         }
 
         private boolean exists() {
