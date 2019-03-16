@@ -1,6 +1,6 @@
 package com.github.chrisgleissner.jutil.table.provider;
 
-import lombok.Data;
+import lombok.Value;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -28,7 +28,7 @@ public class BeanTableProviderTest {
         }
     }
 
-    @Data
+    @Value
     static class Person {
         final String firstName;
         final String lastName;

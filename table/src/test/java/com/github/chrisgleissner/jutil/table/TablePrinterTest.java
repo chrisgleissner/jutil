@@ -49,10 +49,21 @@ public class TablePrinterTest {
                 asList("3", null, "  0123456\r789"))));
     }
 
-
     @Test
     public void asciiNoData() {
         assertTable("asciiNoData", DefaultTablePrinter.print(HEADERS, newArrayList()));
+    }
+
+    @Test
+    public void asciiCustomTab() {
+        assertTable("asciiCustomTab", TablePrinter.builder()
+                .tabReplacementString("  ").build().print(asList("id"), asList(asList("\t1"))));
+    }
+
+    @Test
+    public void asciiCustomEncoding() {
+        assertTable("asciiCustomEncoding", TablePrinter.builder().encoding("ISO-8859-1").build()
+                .print(asList("umlaut", "currency"), asList(asList("ß", "₯"), asList("ä", "€"))));
     }
 
     @Test
