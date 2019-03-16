@@ -179,7 +179,7 @@ results in:
 As per the example above, if you have a very large data structure, you may want to use the `startRow` and `endRow` builder methods 
 to only print the specified range. You can also set the maximum cell width (defaults to 100) and control the wrap-aroud of long cells (enabled by default).
 
-Newlines are supported and tabs are rendered as 8 spaces.
+Newlines are supported and tabs are rendered as 8 spaces (configurable).
 
 ### 3rd Party Adapters
 
