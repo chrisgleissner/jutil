@@ -9,6 +9,7 @@ Java utilities for Protobuf message partitioning, table pretty printing and SQL 
 
 Features:
 * Partitioning of Protobuf messages to remain below a configurable data size.
+* JDBI column name remapping
 * Pretty-printing of tables with many customization options and adapters for both CSV frameworks and DB ResultSets.
 * Record all SQL executions sent via the DataSources in your Spring Boot application, either in memory or to disk.
 
@@ -110,6 +111,26 @@ you will find that the `sql.json` file contains
 [{"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, "query":["create table foo (id int)"], "params":[]},
 {"success":true, "type":"Statement", "batch":false, "querySize":1, "batchSize":0, "query":["insert into foo (id) values (1)"], "params":[]}]
 
+```
+
+## JDBI Column Name Mapping
+
+The [JDBI Column Mapper](https://jdbi.org/#_column_mappers) allows for easy mapping of a `ResultSet` into Java objects. 
+The `jdbi` utility package in this repository provides a wrapper for remapping the column names exposed by a JDBC `ResultSet` and
+can thus decorate any `ColumnMapper` implementation. 
+
+This is useful if the DB schema uses a different language or terminology than the Java model to which it is mapped and
+it is an alternative to applying this mapping via SQL query column labels.
+
+Example:
+
+```java
+jdbiHandle.registerRowMapper(RenamingRowMapperFactory.mapColNames(
+        ConstructorMapper.factory(Person.class),
+        new CsvColumnNameMapping(Path.of("columnNameMappings.csv"))));
+List<Person> personList = jdbiHandle.createQuery("select id, nachname, geburtstag from person")
+        .mapTo(Person.class)
+        .collect(Collectors.toList());
 ```
 
 ## Table Printer
