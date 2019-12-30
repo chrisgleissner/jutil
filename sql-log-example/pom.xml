@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>com.github.chrisgleissner</groupId>
 		<artifactId>jutil</artifactId>
-		<version>1.1.10</version>
+		<version>1.1.11-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.github.chrisgleissner</groupId>
 	<artifactId>jutil-sql-log-example</artifactId>
-	<version>1.1.10</version>
+	<version>1.1.11-SNAPSHOT</version>
 	<name>jutil-sql-log-example</name>
 
 	<dependencies>
