@@ -16,7 +16,7 @@ Features:
 ## Installation
 
 The utilities are packaged in several modules and require at least JDK 8. They are automatically built and tested 
-using OpenJDK 8, 11, and 14.
+using OpenJDK 8 and 11.
 
 To use them, simply declare a dependency towards the module you are interested in:
 
