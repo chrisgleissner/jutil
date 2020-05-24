@@ -15,7 +15,7 @@
     <description>Java JBDI Utilities</description>
 
     <properties>
-        <jdbi3.version>3.12.0</jdbi3.version>
+        <jdbi3.version>3.13.0</jdbi3.version>
     </properties>
 
     <dependencies>
