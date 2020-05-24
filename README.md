@@ -26,26 +26,26 @@ To use them, simply declare a dependency towards the module you are interested i
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-protobuf</artifactId>
-    <version>1.1.9</version>
+    <version>1.1.11</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-sql-log</artifactId>
-    <version>1.1.9</version>
+    <version>1.1.11</version>
 </dependency>
 <dependency>
     <groupId>com.github.chrisgleissner</groupId>
     <artifactId>jutil-table</artifactId>
-    <version>1.1.9</version>
+    <version>1.1.11</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```
-compile 'com.github.chrisgleissner:jutil-protobuf:1.1.9'
-compile 'com.github.chrisgleissner:jutil-sql-log:1.1.9'
-compile 'com.github.chrisgleissner:jutil-table:1.1.9'
+compile 'com.github.chrisgleissner:jutil-protobuf:1.1.11'
+compile 'com.github.chrisgleissner:jutil-sql-log:1.1.11'
+compile 'com.github.chrisgleissner:jutil-table:1.1.11'
 ```
 
 ## Protobuf Utilities
@@ -68,7 +68,7 @@ Collection<Message> msgs = ProtobufFieldPartitioner.partition(msg, repeatedField
 [![Javadocs](https://www.javadoc.io/badge/com.github.chrisgleissner/jutil-sql-log.svg)](https://www.javadoc.io/doc/com.github.chrisgleissner/jutil-sql-log)
 
 The [SqlLog](https://github.com/chrisgleissner/jutil/blob/master/sql-log/src/main/java/com/github/chrisgleissner/jutil/sqllog/SqlLog.java) 
-records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.1.x auto-configuration and relies on [net.ttddyy:datasource-proxy](https://github.com/ttddyy/datasource-proxy) for proxying data sources. 
+records JSON-formatted SQL executions either in memory or to a file. It gets wired by using Spring Boot 2.3.x auto-configuration and relies on [net.ttddyy:datasource-proxy](https://github.com/ttddyy/datasource-proxy) for proxying data sources. 
 
 To use this feature, declare a dependency on `com.github.chrisgleissner:jutil-sql-log`.
 
@@ -237,6 +237,5 @@ JavaBeans
 ```java
 Iterable<Person> people = Arrays.asList(new Person("john", "doe", 30),
         new Person("mary", "poppins", 40));
-String s = DefaultTablePrinter.print(new BeanTableProvider(people))
-                
+String s = DefaultTablePrinter.print(new BeanTableProvider(people))             
 ```
