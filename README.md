@@ -13,10 +13,11 @@ Features:
 * Pretty-printing of tables with many customization options and adapters for both CSV frameworks and DB ResultSets.
 * Record all SQL executions sent via the DataSources in your Spring Boot application, either in memory or to disk.
 
-
 ## Installation
 
-The utilities are packaged in several modules and require at least JDK 8. 
+The utilities are packaged in several modules and require at least JDK 8. They are automatically built and tested 
+using OpenJDK 8, 11, and 14.
+
 To use them, simply declare a dependency towards the module you are interested in:
 
 ### Maven
