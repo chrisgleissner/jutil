@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,7 +13,7 @@ public class CsvColumnNameMappingTest {
 
     @Test
     public void pathWorks() {
-        assertLabelMappings(new CsvColumnNameMapping(Path.of("src/test/resources/columnNameMappings.csv")));
+        assertLabelMappings(new CsvColumnNameMapping(Paths.get("src/test/resources/columnNameMappings.csv")));
     }
 
     private void assertLabelMappings(CsvColumnNameMapping m) {
@@ -23,6 +24,6 @@ public class CsvColumnNameMappingTest {
 
     @Test
     public void inputStream() throws IOException {
-        assertLabelMappings(new CsvColumnNameMapping(Files.newInputStream(Path.of("src/test/resources/columnNameMappings.csv"))));
+        assertLabelMappings(new CsvColumnNameMapping(Files.newInputStream(Paths.get("src/test/resources/columnNameMappings.csv"))));
     }
 }

@@ -6,11 +6,13 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static com.github.chrisgleissner.jutil.table.TablePrinter.DefaultTablePrinter;
 import static com.github.chrisgleissner.jutil.table.TablePrinterFixtures.assertTable;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 @Slf4j
@@ -186,4 +188,26 @@ public class TablePrinterTest {
             assertTable("utf", baos.toString("UTF-8"));
         }
     }
+
+    @Test
+    public void iterable() {
+        Iterable<String> headers = Arrays.asList("firstName", "lastName");
+        Iterable<Iterable<String>> rows = Arrays.asList(Arrays.asList("Tom", "Selleck"),
+                Arrays.asList("John", "Hillerman"), Arrays.asList("Roger E.", null), Arrays.asList("Larry", "Manetti"));
+
+        String tableString = TablePrinter.builder().horizontalDividers(true).nullValue("n/a")
+                .tableFormat(new Utf8TableFormat()).rowNumbers(true).startRow(1).endRow(3).maxCellWidth(5)
+                .wraparound(false).build().print(headers, rows);
+        assertThat(tableString).isEqualTo(
+                "╔═══╤═══════╤═══════╗\n" +
+                "║ # │ first │ lastN ║\n" +
+                "╠═══╪═══════╪═══════╣\n" +
+                "║ 1 │ John  │ Hille ║\n" +
+                "╟───┼───────┼───────╢\n" +
+                "║ 2 │ Roger │ n/a   ║\n" +
+                "╟───┼───────┼───────╢\n" +
+                "║ 3 │ Larry │ Manet ║\n" +
+                "╚═══╧═══════╧═══════╝\n");
+    }
+
 }

@@ -11,6 +11,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -37,7 +38,7 @@ public class RenamingRowMapperTest {
     public void mapsColumnNamesViaRowMapperFactoryAndMappingsFromCsvFile() {
         jdbiRule.getHandle().registerRowMapper(RenamingRowMapperFactory.mapColNames(
                 ConstructorMapper.factory(Person.class),
-                new CsvColumnNameMapping(Path.of("src/test/resources/columnNameMappings.csv"))));
+                new CsvColumnNameMapping(Paths.get("src/test/resources/columnNameMappings.csv"))));
         List<Person> persons = jdbiRule.getHandle().createQuery("select id, nachname, geburtstag from person")
                 .mapTo(Person.class)
                 .collect(Collectors.toList());
