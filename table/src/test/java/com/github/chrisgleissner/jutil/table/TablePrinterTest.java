@@ -190,15 +190,36 @@ public class TablePrinterTest {
     }
 
     @Test
-    public void iterable() {
+    public void example1FromReadme() {
         Iterable<String> headers = Arrays.asList("firstName", "lastName");
-        Iterable<Iterable<String>> rows = Arrays.asList(Arrays.asList("Tom", "Selleck"),
-                Arrays.asList("John", "Hillerman"), Arrays.asList("Roger E.", null), Arrays.asList("Larry", "Manetti"));
+        Iterable<Iterable<String>> rows = Arrays.asList(Arrays.asList("john", "doe"), Arrays.asList("joe", "doe"));
+        assertThat(DefaultTablePrinter.print(headers, rows)).isEqualTo("" +
+                "+===========+==========+\n" +
+                "| firstName | lastName |\n" +
+                "|===========|==========|\n" +
+                "| john      | doe      |\n" +
+                "| joe       | doe      |\n" +
+                "+===========+==========+\n");
+    }
 
-        String tableString = TablePrinter.builder().horizontalDividers(true).nullValue("n/a")
-                .tableFormat(new Utf8TableFormat()).rowNumbers(true).startRow(1).endRow(3).maxCellWidth(5)
-                .wraparound(false).build().print(headers, rows);
-        assertThat(tableString).isEqualTo(
+    @Test
+    public void example2FromReadme() {
+        Iterable<String> headers = Arrays.asList("firstName", "lastName");
+        Iterable<Iterable<String>> rows = Arrays.asList(
+                Arrays.asList("Tom", "Selleck"),
+                Arrays.asList("John", "Hillerman"),
+                Arrays.asList("Roger E.", null),
+                Arrays.asList("Larry", "Manetti"));
+        assertThat(TablePrinter.builder()
+                .horizontalDividers(true)
+                .nullValue("n/a")
+                .tableFormat(new Utf8TableFormat())
+                .rowNumbers(true)
+                .startRow(1)
+                .endRow(3)
+                .maxCellWidth(5)
+                .wraparound(false)
+                .build().print(headers, rows)).isEqualTo("" +
                 "╔═══╤═══════╤═══════╗\n" +
                 "║ # │ first │ lastN ║\n" +
                 "╠═══╪═══════╪═══════╣\n" +
@@ -209,5 +230,4 @@ public class TablePrinterTest {
                 "║ 3 │ Larry │ Manet ║\n" +
                 "╚═══╧═══════╧═══════╝\n");
     }
-
 }
