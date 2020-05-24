@@ -1,6 +1,6 @@
 # jutil
 
-[![Maven Central](https://img.shields.io/maven-metadata/v/http/central.maven.org/maven2/com/github/chrisgleissner/jutil-protobuf/maven-metadata.xml.svg)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil)
+[![Maven Central](https://img.shields.io/maven-central/v/com/github/chrisgleissner/jutil-protobuf)](https://search.maven.org/artifact/com.github.chrisgleissner/jutil-protobuf/)
 [![Build Status](https://travis-ci.org/chrisgleissner/jutil.svg?branch=master)](https://travis-ci.org/chrisgleissner/jutil)
 [![Coverage Status](https://coveralls.io/repos/github/chrisgleissner/jutil/badge.svg?branch=master)](https://coveralls.io/github/chrisgleissner/jutil?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/04051d34bbf92198458e/maintainability)](https://codeclimate.com/github/chrisgleissner/jutil/maintainability)
