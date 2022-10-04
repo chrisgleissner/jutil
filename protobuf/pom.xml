@@ -15,7 +15,7 @@
     <description>Java Protobuf Utilities</description>
 
     <properties>
-        <protobuf.version>3.12.1</protobuf.version>
+        <protobuf.version>3.16.3</protobuf.version>
     </properties>
 
     <dependencies>
